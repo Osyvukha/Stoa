@@ -1,0 +1,369 @@
+const BASE_SHIFTS = [
+  { id: 'a', name: 'Shift A', hours: '08:00 – 12:00', pickers: 3, slots: [
+    ['08:00 – 09:00', 3, 90, 80, 5, 92, 3], ['09:00 – 10:00', 3, 80, 70, 5, 104, 12],
+    ['10:00 – 11:00', 3, 50, 50, 0, 61, 2], ['11:00 – 12:00', 3, 90, 80, 5, 118, 22] ] },
+  { id: 'b', name: 'Shift B', hours: '12:00 – 16:00', pickers: 4, slots: [
+    ['12:00 – 13:00', 3, 100, 50, 20, 143, 25], ['13:00 – 14:00', 3, 110, 100, 5, 97, 9],
+    ['14:00 – 15:00', 3, 40, 40, 0, 46, 1], ['15:00 – 16:00', 3, 80, 70, 5, 85, 6] ] },
+  { id: 'c', name: 'Shift C', hours: '16:00 – 19:00', pickers: 2, slots: [
+    ['16:00 – 17:00', 3, 50, 50, 0, 58, 4], ['17:00 – 18:00', 3, 90, 80, 5, 112, 15],
+    ['18:00 – 19:00', 3, 100, 50, 20, 131, 20] ] }
+];
+/* Example data. Every store's slots add up to its row in the All stores table. */
+const STORES = [
+  { name: 'Korinthou 15, Patras', cap: 0, booked: 0, avail: 0, fullSlots: 0, fc: 420, ex: 'No capacity', exClass: '', status: 'No pickers', tone: 'none', off: true },
+  { name: 'Vouliagmenis 45, Glyfada', cap: 760, booked: 745, avail: 15, fullSlots: 6, fc: 980, ex: '+29%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Kifisias 120, Marousi', cap: 880, booked: 790, avail: 90, fullSlots: 3, fc: 1047, ex: '+19%', exClass: 'extra-high', status: 'High demand', tone: 'low' },
+  { name: 'Patission 88, Athens', cap: 640, booked: 560, avail: 80, fullSlots: 2, fc: 690, ex: '+8%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Mesogeion 210, Cholargos', cap: 700, booked: 490, avail: 210, fullSlots: 0, fc: 610, ex: '−13%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Tsimiski 32, Thessaloniki', cap: 820, booked: 520, avail: 300, fullSlots: 0, fc: 640, ex: '−22%', exClass: 'extra-ok', status: 'On track', tone: 'ok' }
+];
+const ALL_TOTALS = { cap: 3800, booked: 3105, avail: 695, fc: 4387 };
+
+function spread(total, weights) {
+  const sum = weights.reduce((a, b) => a + b, 0);
+  const out = weights.map(w => sum ? Math.floor(total * w / sum) : 0);
+  let rest = total - out.reduce((a, b) => a + b, 0);
+  for (let i = 0; rest > 0; i = (i + 1) % out.length) { if (weights[i]) { out[i]++; rest--; } }
+  return out;
+}
+function shiftsFor(store) {
+  const copy = BASE_SHIFTS.map(s => ({ ...s, slots: s.slots.map(r => [...r]) }));
+  if (store.name.startsWith('Kifisias')) return copy;
+  const rows = copy.flatMap(s => s.slots);
+  const weights = rows.map(r => r[2]);
+  const caps = spread(store.cap, weights), fcs = spread(store.fc, weights);
+  const fullSet = new Set([2, 6, 8, 0, 4, 9].slice(0, store.fullSlots));
+  const openWeights = caps.map((c, i) => fullSet.has(i) ? 0 : c);
+  const left = spread(store.avail, openWeights);
+  rows.forEach((r, i) => {
+    const booked = caps[i] - left[i], reserved = Math.round(booked * .08);
+    r[2] = caps[i]; r[3] = booked - reserved; r[4] = reserved; r[5] = fcs[i];
+    if (store.off) r[6] = null;
+  });
+  if (store.off) copy.forEach(s => { s.pickers = 0; });
+  return copy;
+}
+let SHIFTS = [];
+let currentStore = null;
+const REASONS = ['Staff shortage', 'Vehicle issue', 'High demand', 'Store event', 'Other'];
+const DATES = [['Today', true], ['Fri 16'], ['Sat 17'], ['Sun 18', false, true], ['Mon 19'], ['Tue 20'], ['Wed 21']];
+const $ = id => document.getElementById(id);
+const icon = n => `<svg class="icon"><use href="#i-${n}"/></svg>`;
+
+function numberInput(id, value, label, kind) {
+  return `<div class="number" data-kind="${kind}"><input id="${id}" type="text" inputmode="numeric" value="${value}" data-saved="${value}" aria-label="${label}">
+    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase ${label}">${icon('chev-up')}</button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease ${label}">${icon('chev-down')}</button></div></div>`;
+}
+function badge(left, cap) {
+  if (!cap) return '<span class="badge none">No capacity</span>';
+  if (left <= 0) return '<span class="badge full">Full</span>';
+  return `<span class="badge ${left >= 20 ? 'ok' : 'low'}">${left} left</span>`;
+}
+function extraClass(p) { return p >= 20 ? 'extra-high' : p >= 9 ? 'extra-mid' : 'extra-ok'; }
+
+function renderRows() {
+  $('rows').innerHTML = SHIFTS.map(s => `
+  <tr class="shift-row" data-shift="${s.id}">
+    <td class="shift-cell"><div class="shift-inner">
+      <button class="toggle" type="button" data-toggle="${s.id}" aria-expanded="${!!s.open}" aria-label="${s.name} time slots">${icon('chev-down')}</button>
+      <span class="two-line">${s.name}<small>${s.hours}</small></span>
+    </div></td>
+    <td>${numberInput('pickers-' + s.id, s.pickers, s.name + ' pickers', 'pickers')}</td>
+    <td colspan="7"><span class="unsaved" id="unsaved-${s.id}" hidden></span></td>
+  </tr>` + s.slots.map((r, i) => {
+    const left = r[2] - r[3] - r[4];
+    return `<tr data-slot-of="${s.id}"${s.open ? '' : ' hidden'}>
+      <td class="blank"></td><td class="blank"></td><td class="c-time">${r[0]}</td>
+      <td class="c-row c-del" data-label="Delivery:">${numberInput(`delivery-${s.id}-${i}`, r[1], `Delivery ${r[0]}`, 'delivery')}</td>
+      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">${r[2]}</td><td class="c-row" data-label="Used:">${r[3]}</td><td class="c-row" data-label="Reserved:">${r[4]}</td><td class="c-avail">${badge(left, r[2])}</td>
+      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">${r[5]}${r[6] == null ? '' : `<small class="${extraClass(r[6])}">+${r[6]}% extra</small>`}</span></td>
+    </tr>`; }).join('')).join('');
+}
+
+$('dates').innerHTML = DATES.map(([l, on, off]) => `<button class="chip" type="button" aria-pressed="${!!on}"${off ? ' disabled' : ''}>${icon('check')}${l}</button>`).join('');
+$('reasons').innerHTML = REASONS.map(r => `<button class="chip" type="button" data-reason="${r}" aria-pressed="false">${icon('check')}${r}</button>`).join('');
+
+/* Single-select groups: shows selection only, the example data stays the same. */
+document.querySelectorAll('[data-single]').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+}));
+
+$('menu-toggle').addEventListener('click', () => {
+  const c = $('app').classList.toggle('collapsed');
+  $('menu-toggle').setAttribute('aria-label', c ? 'Expand menu' : 'Collapse menu');
+});
+document.querySelectorAll('[data-soon]').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault(); toast('This prototype covers the Capacity screen only.');
+}));
+
+/* Select: Mantine Select anatomy with a custom dropdown */
+document.querySelectorAll('.select').forEach(root => {
+  const options = root.dataset.options.split('|');
+  root.innerHTML = `<button class="select-control" id="${root.id}-control" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="${root.id}-list" aria-label="${root.dataset.label}"><span class="select-value">${options[0]}</span>${icon('chev-down')}</button>
+    <ul class="select-list" id="${root.id}-list" role="listbox" aria-label="${root.dataset.label}" hidden>${options.map((o, i) => `<li role="option" aria-selected="${i === 0}">${icon('check')}<span>${o}</span></li>`).join('')}</ul>`;
+  const control = root.querySelector('button'), list = root.querySelector('ul'), items = [...list.children];
+  let active = 0;
+  const mark = i => { active = (i + items.length) % items.length; items.forEach((x, n) => x.classList.toggle('active', n === active)); };
+  const setOpen = open => {
+    list.hidden = !open; control.setAttribute('aria-expanded', open);
+    if (open) mark(items.findIndex(x => x.getAttribute('aria-selected') === 'true'));
+  };
+  const choose = i => {
+    items.forEach((x, n) => x.setAttribute('aria-selected', n === i));
+    control.querySelector('.select-value').textContent = options[i];
+    setOpen(false); control.focus();
+    root.dispatchEvent(new CustomEvent('choose', { detail: options[i] }));
+  };
+  root.setValue = v => {
+    const i = options.indexOf(v);
+    items.forEach((x, n) => x.setAttribute('aria-selected', n === i));
+    control.querySelector('.select-value').textContent = v;
+  };
+  control.addEventListener('click', () => setOpen(list.hidden));
+  items.forEach((x, i) => x.addEventListener('click', () => choose(i)));
+  control.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !list.hidden) { e.preventDefault(); e.stopPropagation(); setOpen(false); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (list.hidden) setOpen(true); else mark(active + (e.key === 'ArrowDown' ? 1 : -1));
+    } else if ((e.key === 'Enter' || e.key === ' ') && !list.hidden) { e.preventDefault(); choose(active); }
+  });
+  document.addEventListener('click', e => { if (!root.contains(e.target)) setOpen(false); });
+});
+
+/* Table */
+const deliveryInputs = () => [...document.querySelectorAll('.number[data-kind="delivery"] input')];
+const isChanged = i => Number(i.value) !== Number(i.dataset.saved);
+const changedDelivery = () => deliveryInputs().filter(isChanged);
+
+const isZero = i => i.value !== '' && Number(i.value) === 0;
+
+function applyGreyOut() {
+  SHIFTS.forEach(s => {
+    const off = isZero($('pickers-' + s.id));
+    document.querySelector(`.shift-row[data-shift="${s.id}"]`).classList.toggle('off', off);
+    document.querySelectorAll(`[data-slot-of="${s.id}"]`).forEach(row => {
+      const inp = row.querySelector('input');
+      row.classList.toggle('off', off || isZero(inp));
+      /* No pickers means no delivery to edit. A slot at 0 stays editable so it can be reopened. */
+      inp.disabled = off;
+      row.querySelectorAll('.steps button').forEach(b => { b.disabled = off; });
+    });
+  });
+}
+
+function setShift(s, open) {
+  s.open = open;
+  document.querySelector(`[data-toggle="${s.id}"]`).setAttribute('aria-expanded', open);
+  document.querySelectorAll(`[data-slot-of="${s.id}"]`).forEach(r => { r.hidden = !open; });
+}
+
+function refresh() {
+  applyGreyOut();
+  document.querySelectorAll('.number input').forEach(i => i.parentElement.classList.toggle('changed', isChanged(i)));
+  SHIFTS.forEach(s => {
+    const n = deliveryInputs().filter(i => i.id.startsWith(`delivery-${s.id}-`) && isChanged(i)).length;
+    const el = $('unsaved-' + s.id);
+    el.hidden = s.open || !n;
+    el.textContent = `${n} unsaved ${n === 1 ? 'change' : 'changes'}`;
+  });
+}
+$('rows').addEventListener('click', e => {
+  const t = e.target.closest('[data-toggle]');
+  if (t) {
+    const s = SHIFTS.find(x => x.id === t.dataset.toggle);
+    setShift(s, !s.open);
+    refresh();
+    return;
+  }
+  const b = e.target.closest('[data-step]');
+  if (b) {
+    const inp = b.closest('.number').querySelector('input');
+    inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) + Number(b.dataset.step));
+    refresh();
+  }
+});
+$('rows').addEventListener('input', e => {
+  if (!e.target.matches('.number input')) return;
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+  refresh();
+});
+$('rows').addEventListener('focusout', e => {
+  if (e.target.matches('.number input') && e.target.value === '') { e.target.value = e.target.dataset.saved; refresh(); }
+});
+$('rows').addEventListener('keydown', e => {
+  if (!e.target.matches('.number input') || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  e.preventDefault();
+  e.target.value = Math.max(0, (parseInt(e.target.value, 10) || 0) + (e.key === 'ArrowUp' ? 1 : -1));
+  refresh();
+});
+
+function commit() {
+  document.querySelectorAll('.number input').forEach(i => { i.value = Number(i.value); i.dataset.saved = i.value; });
+  SHIFTS.forEach(s => {
+    s.pickers = Number($('pickers-' + s.id).value);
+    s.slots.forEach((r, n) => { r[1] = Number($(`delivery-${s.id}-${n}`).value); });
+  });
+  refresh();
+}
+function toast(text, success) {
+  $('toast-text').textContent = text;
+  $('toast').classList.toggle('success', !!success);
+  $('toast-icon').innerHTML = `<use href="#i-${success ? 'check' : 'info'}"/>`;
+  $('toast').hidden = false;
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => { $('toast').hidden = true; }, 4000);
+}
+
+$('save').addEventListener('click', () => {
+  const n = changedDelivery().length;
+  if (n) return openDrawer(n);
+  const others = [...document.querySelectorAll('.number[data-kind="pickers"] input')].some(isChanged);
+  if (others) { commit(); toast('Changes saved.', true); }
+  else toast('No changes to save. Change a Delivery number first.');
+});
+
+/* Drawer */
+const selected = () => [...$('reasons').querySelectorAll('[aria-pressed="true"]')].map(b => b.dataset.reason);
+function syncDetails() {
+  const other = selected().includes('Other');
+  $('details-req').hidden = !other;
+  if (!other || $('details').value.trim()) { $('details-error').hidden = true; $('details').classList.remove('invalid'); }
+}
+function openDrawer(n) {
+  $('toast').hidden = true;
+  $('changed-count').textContent = `${n} ${n === 1 ? 'slot' : 'slots'} changed`;
+  document.body.classList.add('open');
+  document.documentElement.style.overflow = 'hidden';
+  $('app').inert = true; $('drawer').inert = false;
+  $('drawer-title').focus();
+}
+function closeDrawer() {
+  document.body.classList.remove('open');
+  document.documentElement.style.overflow = '';
+  $('app').inert = false; $('drawer').inert = true;
+  $('save').focus();
+}
+function resetForm() {
+  $('reasons').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  $('details').value = '';
+  $('reason-error').hidden = true;
+  syncDetails();
+}
+$('reasons').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
+  if (selected().length) $('reason-error').hidden = true;
+  syncDetails();
+});
+$('details').addEventListener('input', syncDetails);
+['drawer-close', 'drawer-cancel', 'overlay'].forEach(id => $(id).addEventListener('click', closeDrawer));
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('open')) return;
+  if (e.key === 'Escape') return closeDrawer();
+  if (e.key !== 'Tab') return;
+  const items = [...$('drawer').querySelectorAll('button, textarea')].filter(x => !x.disabled);
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === $('drawer-title'))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+$('reason-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const reasons = selected();
+  const noReason = !reasons.length;
+  const noDetails = reasons.includes('Other') && !$('details').value.trim();
+  $('reason-error').hidden = !noReason;
+  $('details-error').hidden = !noDetails;
+  $('details').classList.toggle('invalid', noDetails);
+  if (noReason) return $('reasons').querySelector('button').focus();
+  if (noDetails) return $('details').focus();
+  const n = changedDelivery().length;
+  commit();
+  closeDrawer();
+  resetForm();
+  toast(`Saved ${n} delivery ${n === 1 ? 'change' : 'changes'}. Reason: ${reasons.join(', ')}.`, true);
+});
+/* Mobile: burger menu, and only Shift A starts open as in Figma */
+const mobile = matchMedia('(max-width: 760px)');
+function setMenu(open) {
+  $('app').classList.toggle('menu-open', open);
+  document.documentElement.style.overflow = open ? 'hidden' : '';
+  (open ? $('menu-close') : $('burger')).focus({ preventScroll: true });
+}
+$('burger').addEventListener('click', () => setMenu(true));
+$('menu-close').addEventListener('click', () => setMenu(false));
+document.querySelectorAll('.menu a.nav').forEach(a => a.addEventListener('click', () => { if (mobile.matches) setMenu(false); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('app').classList.contains('menu-open')) setMenu(false); });
+function applyDefaults() {
+  $('app').classList.remove('menu-open', 'collapsed');
+  if (!document.body.classList.contains('open')) document.documentElement.style.overflow = '';
+  if (!SHIFTS.length) return;
+  setShift(SHIFTS[0], true);
+  setShift(SHIFTS[1], !mobile.matches);
+  setShift(SHIFTS[2], false);
+  refresh();
+}
+mobile.addEventListener('change', applyDefaults);
+
+/* All stores overview, then a selected store */
+const fmt = n => n.toLocaleString('en-US');
+function setKpis(v) {
+  $('kpi-cap').textContent = fmt(v.cap); $('kpi-booked').textContent = fmt(v.booked);
+  $('kpi-avail').textContent = fmt(v.avail); $('kpi-fc').textContent = fmt(v.fc);
+}
+$('store-rows').innerHTML = STORES.map((s, i) => `
+  <tr class="store-row${s.off ? ' off' : ''}">
+    <td class="s-name"><button class="store-link" type="button" data-open-store="${i}">${s.name}</button></td>
+    <td class="c-row" data-label="Booked:"><div class="booked"><span>${s.cap ? `${fmt(s.booked)} of ${fmt(s.cap)}` : '–'}</span><div class="bar"><i style="width:${s.cap ? Math.round(s.booked / s.cap * 100) : 0}%"></i></div></div></td>
+    <td class="c-row" data-label="Available:">${s.avail}</td>
+    <td class="c-row" data-label="Full slots:">${s.cap ? `${s.fullSlots} of 11` : '–'}</td>
+    <td class="c-row" data-label="Orders forecast:"><span class="two-line">${fmt(s.fc)}<small class="${s.exClass}">${s.ex}${s.off ? '' : '<span class="vs"> vs capacity</span>'}</small></span></td>
+    <td class="s-status"><span class="badge ${s.tone}">${s.status}</span></td>
+  </tr>`).join('');
+
+function showStore(store) {
+  currentStore = store;
+  $('app').classList.toggle('overview', !store);
+  $('attention').hidden = !!store;
+  $('stores-view').hidden = !!store;
+  $('store-view').hidden = !store;
+  $('store').setValue(store ? store.name : 'All stores');
+  setKpis(store || ALL_TOTALS);
+  if (store) {
+    store.shifts = store.shifts || shiftsFor(store);
+    SHIFTS = store.shifts;
+    renderRows();
+    applyDefaults();
+  } else {
+    SHIFTS = [];
+    $('rows').innerHTML = '';
+  }
+  $('toast').hidden = true;
+  window.scrollTo(0, 0);
+}
+let pendingStore;
+const hasEdits = () => [...document.querySelectorAll('#rows .number input')].some(isChanged);
+function requestStore(store) {
+  if (store === currentStore) return;
+  if (!hasEdits()) return showStore(store);
+  pendingStore = store;
+  $('store').setValue(currentStore.name);
+  $('confirm').hidden = false;
+  $('app').inert = true;
+  $('confirm-keep').focus();
+}
+function closeConfirm() { $('confirm').hidden = true; $('app').inert = false; $('store-control').focus(); }
+$('confirm-keep').addEventListener('click', closeConfirm);
+$('confirm-discard').addEventListener('click', () => { closeConfirm(); showStore(pendingStore); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('confirm').hidden) closeConfirm(); });
+$('store').addEventListener('choose', e => requestStore(STORES.find(s => s.name === e.detail) || null));
+$('store-rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-open-store]');
+  if (b) requestStore(STORES[Number(b.dataset.openStore)]);
+});
+const deep = new URLSearchParams(location.search).get('store');
+showStore(STORES.find(s => s.name === deep) || null);
