@@ -406,10 +406,10 @@ function sectionShifts(store) {
   const out = [];
   if (store.ful.includes('Delivery')) {
     if (ctl.period === 'Today') {
-      out.push(copy(base[0], 'fd-a', 'Fast delivery · Internal orders'));
-      out.push(copy(base[1], 'sd-b', 'Same day delivery · Internal orders'));
-      out.push(copy(base[2], 'ex-c', 'Same day delivery · Bolt / Wolt'));
-    } else base.forEach(sh => out.push(copy(sh, 'nd-' + sh.id, 'Next day delivery · Internal orders')));
+      out.push(copy(base[0], 'fd-a', 'Internal orders · Fast delivery'));
+      out.push(copy(base[1], 'sd-b', 'Internal orders · Same day delivery'));
+      out.push(copy(base[2], 'ex-c', 'Bolt / Wolt · Same day delivery'));
+    } else base.forEach(sh => out.push(copy(sh, 'nd-' + sh.id, 'Internal orders · Next day delivery')));
   }
   if (store.ful.includes('Collect')) out.push(copy(base[2], 'col', 'Collect', { name: 'Collect shift', hours: '10:00 – 20:00' }));
   return (store[key] = out);
