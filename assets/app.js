@@ -1,6 +1,6 @@
 const BASE_SHIFTS = [
-  { id: 'a', name: 'Shift A', hours: '08:00 – 12:00', pickers: 3, slots: [
-    ['08:00 – 09:00', 3, 90, 80, 5, 92, 3], ['09:00 – 10:00', 3, 80, 70, 5, 104, 12],
+  { id: 'a', name: 'Shift A (FT)', hours: '08:00 – 12:00', pickers: 3, slots: [
+    ['08:00 – 09:00 (FT)', 3, 90, 80, 5, 92, 3], ['09:00 – 10:00', 3, 80, 70, 5, 104, 12],
     ['10:00 – 11:00', 3, 50, 50, 0, 61, 2], ['11:00 – 12:00', 3, 90, 80, 5, 118, 22] ] },
   { id: 'b', name: 'Shift B', hours: '12:00 – 16:00', pickers: 4, slots: [
     ['12:00 – 13:00', 3, 100, 50, 20, 143, 25], ['13:00 – 14:00', 3, 110, 100, 5, 97, 9],
@@ -93,7 +93,7 @@ function renderRows() {
     return `<tr data-slot-of="${s.id}"${s.open ? '' : ' hidden'}>
       <td class="blank"></td><td class="blank"></td><td class="c-time">${r[0]}</td>
       <td class="c-row c-del" data-label="Delivery:">${numberInput(`delivery-${s.id}-${i}`, r[1], `Delivery ${r[0]}`, 'delivery')}</td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">${r[2]}</td><td class="c-row" data-label="Used:">${r[3]}</td><td class="c-row" data-label="Reserved:">${r[4]}</td><td class="c-avail">${badge(left, r[2])}</td>
+      <td class="c-group">Capacity (orders)</td><td class="c-row" data-label="Total:">${r[2]}</td><td class="c-row" data-label="Used:">${r[3]}</td><td class="c-row" data-label="Reserved:">${r[4]}</td><td class="c-avail">${badge(left, r[2])}</td>
       <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">${r[5]}${r[6] == null ? '' : `<small class="${extraClass(r[6])}">+${r[6]}% extra</small>`}</span></td>
     </tr>`; }).join('')).join('');
 }
@@ -117,6 +117,7 @@ document.querySelectorAll('[data-soon]').forEach(a => a.addEventListener('click'
 }));
 
 /* Select: Mantine Select anatomy with a custom dropdown */
+$('store').dataset.options = ['All stores', ...STORES.map(s => s.name).sort((a, b) => a.localeCompare(b))].join('|');
 document.querySelectorAll('.select').forEach(root => {
   const options = root.dataset.options.split('|');
   root.innerHTML = `<button class="select-control" id="${root.id}-control" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="${root.id}-list" aria-label="${root.dataset.label}"><span class="select-value">${options[0]}</span>${icon('chev-down')}</button>

@@ -6,7 +6,7 @@
 <title>Capacity · AB Store Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/styles.css?v=3">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -152,10 +152,10 @@
       </div>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Capacity by shift and time slot">
         <table>
-          <colgroup><col style="width:132px"><col style="width:92px"><col style="width:120px"><col style="width:92px"><col style="width:92px"><col style="width:108px"><col style="width:96px"><col style="width:108px"><col style="width:160px"></colgroup>
+          <colgroup><col style="width:13.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:10.8%"><col style="width:9.6%"><col style="width:10.8%"><col style="width:13.6%"></colgroup>
           <thead>
-            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup">Orders capacity</th><th rowspan="2" scope="col">Orders forecast</th></tr>
-            <tr><th scope="col">Full</th><th scope="col">Used</th><th scope="col">Reserved</th><th scope="col">Available</th></tr>
+            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup">Capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
+            <tr><th scope="col">Total</th><th scope="col">Used</th><th scope="col">Reserved</th><th scope="col">Available</th></tr>
           </thead>
           <tbody id="rows">
   <tr class="shift-row" data-shift="a">
@@ -295,6 +295,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" hidden=""><svg class="icon" id="toast-icon"><use href="#i-info"></use></svg><span id="toast-text"></span></div>
-<script src="assets/app.js"></script>
+<script src="assets/app.js?v=3"></script>
 </body>
 </html>
