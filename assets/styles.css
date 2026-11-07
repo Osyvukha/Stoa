@@ -137,6 +137,7 @@ th.group { text-align: center; border-bottom: 1px solid var(--border-subtle); }
 .toggle[aria-expanded="false"] .icon { transform: rotate(-90deg); }
 .two-line { display: block; line-height: 1.45; }
 .two-line small { display: block; font-size: 12px; color: var(--dimmed); }
+.shift-type { font-size: 14px; font-weight: 600; color: var(--dimmed); margin-right: var(--md); }
 .unsaved { font-size: 12px; color: var(--blue); font-weight: 500; }
 .badge { display: inline-flex; align-items: center; height: 20px; padding: 0 10px; border-radius: 1000px; font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
 .badge.low { background: var(--orange-bg); color: var(--orange-text); }
@@ -277,6 +278,7 @@ textarea.invalid { border-color: var(--red); }
   .shift-row > td:nth-child(2)::before { content: "Pickers"; }
   .shift-row > td:nth-child(3) { flex: 1 1 100%; }
   .shift-row .unsaved { display: block; padding-bottom: 8px; }
+  .shift-row .shift-type { display: block; padding-bottom: 8px; font-size: 12px; }
   .shift-row.off, tr.off.shift-row { background: var(--line); }
 
   tr[data-slot-of] { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; row-gap: 4px; align-items: center; padding: var(--sm) 10px; }

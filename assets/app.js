@@ -84,15 +84,14 @@ function badge(left, cap) {
 function extraClass(p) { return p >= 20 ? 'extra-high' : p >= 9 ? 'extra-mid' : 'extra-ok'; }
 
 function renderRows() {
-  $('rows').innerHTML = SHIFTS.map((s, si) => (s.section && s.section !== (SHIFTS[si - 1] || {}).section
-    ? `<tr class="section-row"><th colspan="9" scope="rowgroup"><span>${s.section}</span></th></tr>` : '') + `
+  $('rows').innerHTML = SHIFTS.map(s => `
   <tr class="shift-row" data-shift="${s.id}">
     <td class="shift-cell"><div class="shift-inner">
       <button class="toggle" type="button" data-toggle="${s.id}" aria-expanded="${!!s.open}" aria-label="${s.name} time slots">${icon('chev-down')}</button>
       <span class="two-line">${s.name}<small>${s.hours}</small></span>
     </div></td>
     <td>${numberInput('pickers-' + s.id, s.pickers, s.name + ' pickers', 'pickers')}</td>
-    <td colspan="7"><span class="unsaved" id="unsaved-${s.id}" hidden></span></td>
+    <td colspan="7">${s.section ? `<span class="shift-type">${s.section}</span>` : ''}<span class="unsaved" id="unsaved-${s.id}" hidden></span></td>
   </tr>` + s.slots.map((r, i) => {
     const left = r[2] - r[3] - r[4];
     return `<tr data-slot-of="${s.id}"${s.open ? '' : ' hidden'}>
