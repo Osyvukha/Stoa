@@ -66,22 +66,17 @@
       </div>
     </header>
 
-    <div class="alert" id="attention" role="status" hidden="">
-      <svg class="icon"><use href="#i-info"></use></svg>
-      <div><b>12 stores need attention today</b>Korinthou 15 has no pickers. 5 stores are almost full and demand is above capacity at 6 more.</div>
-    </div>
 
     <section class="kpis" aria-label="Summary">
-      <div class="kpi"><div class="kpi-top">Capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-value" id="kpi-cap">760</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+3%</b>slots vs last week</div></div>
-      <div class="kpi"><div class="kpi-top">Booked<span class="tile"><svg class="icon"><use href="#i-cart"></use></svg></span></div><div class="kpi-value" id="kpi-booked">745</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+5.1%</b>vs last week</div></div>
-      <div class="kpi"><div class="kpi-top">Available<span class="tile"><svg class="icon"><use href="#i-loader"></use></svg></span></div><div class="kpi-value" id="kpi-avail">15</div><div class="delta"><svg class="icon down"><use href="#i-down"></use></svg><b class="down">−180</b>slots vs last week</div></div>
-      <div class="kpi"><div class="kpi-top">Demand forecast<span class="tile"><svg class="icon"><use href="#i-user"></use></svg></span></div><div class="kpi-value" id="kpi-fc">980</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+9%</b>orders vs last week</div></div>
+      <div class="kpi"><div class="kpi-top">Total capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-cap">760</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+3%</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Used capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-booked">745</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+5.1%</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Available capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-avail">15</div><div class="delta"><svg class="icon down"><use href="#i-down"></use></svg><b class="down">−180</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Orders forecast<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-fc">980</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+9%</b>vs last week</div></div></div>
     </section>
 
     <section class="controls" aria-label="Filters">
       <div class="filters">
         <div class="segmented" id="order-method" data-single="" role="group" aria-label="Order method"><button type="button" aria-pressed="true">Delivery</button><button type="button" aria-pressed="false">Click &amp; collect</button></div>
-        <div class="segmented" data-single="" role="group" aria-label="Range"><button type="button" aria-pressed="true">Day</button><button type="button" aria-pressed="false">Week</button></div>
       </div>
       <div class="chips scroll" data-single="" role="group" aria-label="Date" id="dates"><button class="chip" type="button" aria-pressed="true"><svg class="icon"><use href="#i-check"></use></svg>Today</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Fri 16</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Sat 17</button><button class="chip" type="button" aria-pressed="false" disabled=""><svg class="icon"><use href="#i-check"></use></svg>Sun 18</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Mon 19</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Tue 20</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Wed 21</button></div>
     </section>

@@ -64,7 +64,7 @@ function shiftsFor(store) {
 let SHIFTS = [];
 let currentStore = null;
 const REASONS = ['Staff shortage', 'Vehicle issue', 'High demand', 'Store event', 'Other'];
-const DATES = [['Today', true], ['Fri 16'], ['Sat 17'], ['Sun 18', false, true], ['Mon 19'], ['Tue 20'], ['Wed 21']];
+const DATES = [['All 7 days'], ['Today', true], ['Fri 16'], ['Sat 17'], ['Sun 18', false, true], ['Mon 19'], ['Tue 20'], ['Wed 21']];
 const $ = id => document.getElementById(id);
 const icon = n => `<svg class="icon"><use href="#i-${n}"/></svg>`;
 
@@ -360,7 +360,6 @@ window.addEventListener('resize', fitStores);
 function showStore(store) {
   currentStore = store;
   $('app').classList.toggle('overview', !store);
-  $('attention').hidden = !!store;
   $('order-method').hidden = !store;
   $('stores-view').hidden = !!store;
   $('store-view').hidden = !store;
