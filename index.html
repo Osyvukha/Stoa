@@ -68,7 +68,7 @@
 
     <div class="alert" id="attention" role="status" hidden="">
       <svg class="icon"><use href="#i-info"></use></svg>
-      <div><b>4 stores need attention today</b>Korinthou 15 has no pickers. Vouliagmenis 45 is almost full. Demand is above capacity at Kifisias 120 and Patission 88.</div>
+      <div><b>12 stores need attention today</b>Korinthou 15 has no pickers. 5 stores are almost full and demand is above capacity at 6 more.</div>
     </div>
 
     <section class="kpis" aria-label="Summary">
@@ -80,20 +80,21 @@
 
     <section class="controls" aria-label="Filters">
       <div class="filters">
-        <div class="segmented" data-single="" role="group" aria-label="Order method"><button type="button" aria-pressed="true">Delivery</button><button type="button" aria-pressed="false">Click &amp; collect</button></div>
+        <div class="segmented" id="order-method" data-single="" role="group" aria-label="Order method"><button type="button" aria-pressed="true">Delivery</button><button type="button" aria-pressed="false">Click &amp; collect</button></div>
         <div class="segmented" data-single="" role="group" aria-label="Range"><button type="button" aria-pressed="true">Day</button><button type="button" aria-pressed="false">Week</button></div>
       </div>
       <div class="chips scroll" data-single="" role="group" aria-label="Date" id="dates"><button class="chip" type="button" aria-pressed="true"><svg class="icon"><use href="#i-check"></use></svg>Today</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Fri 16</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Sat 17</button><button class="chip" type="button" aria-pressed="false" disabled=""><svg class="icon"><use href="#i-check"></use></svg>Sun 18</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Mon 19</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Tue 20</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Wed 21</button></div>
     </section>
 
     <section class="paper" id="stores-view" hidden="">
-      <div class="toolbar"><h2>Stores</h2></div>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="All stores today">
+      <div class="toolbar"><h2 id="stores-title">Stores</h2></div>
+      <div class="scroll-frame" id="stores-frame">
+      <div class="table-wrap stores-scroll" tabindex="0" role="region" aria-label="All stores today">
         <table class="stores-table">
-          <colgroup><col style="width:250px"><col style="width:210px"><col style="width:100px"><col style="width:110px"><col style="width:180px"><col style="width:150px"></colgroup>
+          <colgroup><col style="width:25%"><col style="width:21%"><col style="width:10%"><col style="width:11%"><col style="width:18%"><col style="width:15%"></colgroup>
           <thead>
-            <tr><th rowspan="2" scope="col">Store</th><th colspan="3" class="group" scope="colgroup">Orders capacity</th><th rowspan="2" scope="col">Orders forecast</th><th rowspan="2" scope="col">Status</th></tr>
-            <tr><th scope="col">Booked</th><th scope="col">Available</th><th scope="col">Full slots</th></tr>
+            <tr><th rowspan="2" scope="col">Store</th><th colspan="2" class="group" scope="colgroup">Capacity (Orders)</th><th rowspan="2" scope="col">Full slots</th><th rowspan="2" scope="col">Orders forecast</th><th rowspan="2" scope="col">Status</th></tr>
+            <tr><th scope="col">Used</th><th scope="col">Available</th></tr>
           </thead>
           <tbody id="store-rows">
   <tr class="store-row off">
@@ -145,6 +146,7 @@
     <td class="s-status"><span class="badge ok">On track</span></td>
   </tr></tbody>
         </table>
+      </div>
       </div>
     </section>
 

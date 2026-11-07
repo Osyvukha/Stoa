@@ -16,9 +16,26 @@ const STORES = [
   { name: 'Kifisias 120, Marousi', cap: 880, booked: 790, avail: 90, fullSlots: 3, fc: 1047, ex: '+19%', exClass: 'extra-high', status: 'High demand', tone: 'low' },
   { name: 'Patission 88, Athens', cap: 640, booked: 560, avail: 80, fullSlots: 2, fc: 690, ex: '+8%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
   { name: 'Mesogeion 210, Cholargos', cap: 700, booked: 490, avail: 210, fullSlots: 0, fc: 610, ex: '−13%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
-  { name: 'Tsimiski 32, Thessaloniki', cap: 820, booked: 520, avail: 300, fullSlots: 0, fc: 640, ex: '−22%', exClass: 'extra-ok', status: 'On track', tone: 'ok' }
+  { name: 'Tsimiski 32, Thessaloniki', cap: 820, booked: 520, avail: 300, fullSlots: 0, fc: 640, ex: '−22%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Alexandras 50, Athens', cap: 640, booked: 610, avail: 30, fullSlots: 4, fc: 702, ex: '+10%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Kifisias 300, Kifisia', cap: 720, booked: 700, avail: 20, fullSlots: 7, fc: 860, ex: '+19%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Vasilissis Sofias 12, Athens', cap: 680, booked: 400, avail: 280, fullSlots: 0, fc: 520, ex: '−24%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Ethnikis Antistaseos 8, Nea Smyrni', cap: 600, booked: 540, avail: 60, fullSlots: 2, fc: 650, ex: '+8%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Egnatias 154, Thessaloniki', cap: 600, booked: 590, avail: 10, fullSlots: 8, fc: 720, ex: '+20%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Iroon Polytechniou 55, Piraeus', cap: 560, booked: 380, avail: 180, fullSlots: 0, fc: 470, ex: '−16%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Thiseos 100, Kallithea', cap: 620, booked: 500, avail: 120, fullSlots: 1, fc: 600, ex: '−3%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Marathonos 20, Pallini', cap: 520, booked: 470, avail: 50, fullSlots: 3, fc: 575, ex: '+11%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Dimokratias 15, Larissa', cap: 600, booked: 420, avail: 180, fullSlots: 0, fc: 500, ex: '−17%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: '25is Avgoustou 30, Heraklion', cap: 660, booked: 650, avail: 10, fullSlots: 9, fc: 780, ex: '+18%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Akti Dymaion 60, Patras', cap: 540, booked: 360, avail: 180, fullSlots: 0, fc: 430, ex: '−20%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Irakleiou 400, Nea Ionia', cap: 580, booked: 520, avail: 60, fullSlots: 3, fc: 640, ex: '+10%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Gounari 4, Ioannina', cap: 480, booked: 300, avail: 180, fullSlots: 0, fc: 350, ex: '−27%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Lampraki 200, Glyfada', cap: 700, booked: 690, avail: 10, fullSlots: 8, fc: 830, ex: '+19%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Agiou Dimitriou 81, Kalamata', cap: 500, booked: 330, avail: 170, fullSlots: 0, fc: 410, ex: '−18%', exClass: 'extra-ok', status: 'On track', tone: 'ok' }
 ];
-const ALL_TOTALS = { cap: 3800, booked: 3105, avail: 695, fc: 4387 };
+const RANK = { 'No pickers': 0, 'Almost full': 1, 'High demand': 2, 'On track': 3 };
+STORES.sort((a, b) => (RANK[a.status] - RANK[b.status]) || ((b.cap ? b.booked / b.cap : 0) - (a.cap ? a.booked / a.cap : 0)));
+const ALL_TOTALS = ['cap', 'booked', 'avail', 'fc'].reduce((t, k) => (t[k] = STORES.reduce((s, x) => s + x[k], 0), t), {});
 
 function spread(total, weights) {
   const sum = weights.reduce((a, b) => a + b, 0);
@@ -318,17 +335,33 @@ function setKpis(v) {
 $('store-rows').innerHTML = STORES.map((s, i) => `
   <tr class="store-row${s.off ? ' off' : ''}">
     <td class="s-name"><button class="store-link" type="button" data-open-store="${i}">${s.name}</button></td>
-    <td class="c-row" data-label="Booked:"><div class="booked"><span>${s.cap ? `${fmt(s.booked)} of ${fmt(s.cap)}` : '–'}</span><div class="bar"><i style="width:${s.cap ? Math.round(s.booked / s.cap * 100) : 0}%"></i></div></div></td>
+    <td class="c-row" data-label="Used:"><div class="booked"><span>${s.cap ? `${fmt(s.booked)} of ${fmt(s.cap)}` : '–'}</span><div class="bar"><i style="width:${s.cap ? Math.round(s.booked / s.cap * 100) : 0}%"></i></div></div></td>
     <td class="c-row" data-label="Available:">${s.avail}</td>
     <td class="c-row" data-label="Full slots:">${s.cap ? `${s.fullSlots} of 11` : '–'}</td>
     <td class="c-row" data-label="Orders forecast:"><span class="two-line">${fmt(s.fc)}<small class="${s.exClass}">${s.ex}${s.off ? '' : '<span class="vs"> vs capacity</span>'}</small></span></td>
     <td class="s-status"><span class="badge ${s.tone}">${s.status}</span></td>
   </tr>`).join('');
 
+$('stores-title').textContent = `Stores (${STORES.length})`;
+const storesScroll = document.querySelector('.stores-scroll');
+const updateFade = () => $('stores-frame').classList.toggle('at-end', storesScroll.scrollTop + storesScroll.clientHeight >= storesScroll.scrollHeight - 2);
+storesScroll.addEventListener('scroll', updateFade, { passive: true });
+function fitStores() {
+  storesScroll.style.maxHeight = '';
+  if (mobile.matches || $('stores-view').hidden) return;
+  const top = storesScroll.getBoundingClientRect().top + window.scrollY;
+  storesScroll.style.maxHeight = Math.max(320, innerHeight - top - 48) + 'px';
+  const over = document.documentElement.scrollHeight - innerHeight;
+  if (over > 0) storesScroll.style.maxHeight = Math.max(320, storesScroll.clientHeight - over) + 'px';
+  updateFade();
+}
+window.addEventListener('resize', fitStores);
+
 function showStore(store) {
   currentStore = store;
   $('app').classList.toggle('overview', !store);
   $('attention').hidden = !!store;
+  $('order-method').hidden = !store;
   $('stores-view').hidden = !!store;
   $('store-view').hidden = !store;
   $('store').setValue(store ? store.name : 'All stores');
@@ -344,6 +377,7 @@ function showStore(store) {
   }
   $('toast').hidden = true;
   window.scrollTo(0, 0);
+  if (!store) { storesScroll.scrollTop = 0; requestAnimationFrame(fitStores); }
 }
 let pendingStore;
 const hasEdits = () => [...document.querySelectorAll('#rows .number input')].some(isChanged);
