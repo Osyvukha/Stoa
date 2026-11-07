@@ -281,14 +281,14 @@ textarea.invalid { border-color: var(--red); }
   .shift-row .shift-type { display: block; padding-bottom: 8px; font-size: 12px; }
   .shift-row.off, tr.off.shift-row { background: var(--line); }
 
-  tr[data-slot-of] { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; row-gap: 4px; align-items: center; padding: var(--sm) 10px; }
+  tr[data-slot-of] { display: grid; grid-template-columns: 136px minmax(0, 1fr); column-gap: var(--lg); row-gap: 4px; align-items: center; padding: var(--sm) 10px; }
   tr[data-slot-of] + tr[data-slot-of] { border-top: 1px solid var(--border-subtle); }
   tr[data-slot-of].off { background: var(--line); }
   tr[data-slot-of] .blank { display: none; }
   .c-time { font-weight: 600; grid-column: 1; grid-row: 1; margin-bottom: 6px; }
   .c-avail { grid-column: 2; grid-row: 1; margin-bottom: 6px; justify-self: start; }
   .c-row { grid-column: 1 / -1; display: flex; align-items: center; }
-  .c-row::before { content: attr(data-label); flex: 0 0 116px; margin-right: var(--lg); }
+  .c-row::before { content: attr(data-label); flex: 0 0 136px; margin-right: var(--lg); }
   .c-del { margin-bottom: 6px; }
   .c-group { display: block; grid-column: 1 / -1; font-weight: 600; }
   .c-fc { margin-top: 6px; }
