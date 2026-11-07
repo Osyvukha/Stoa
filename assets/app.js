@@ -114,7 +114,7 @@ document.querySelectorAll('[data-single]').forEach(g => g.addEventListener('clic
 /* Store page controls, as in Figma "Store page — Controls states":
    1 Delivery · Internal · Today → Fast | Same day
    2 Delivery · Internal · other day → Next day only
-   3 Delivery · External (Bolt, Wolt) → Same day only
+   3 Delivery · External (Bolt, Wolt) → Today only, Same day only
    4 Collect → no order source or delivery type */
 const ctl = { ful: 'Delivery', src: 'Internal orders', type: 'Fast delivery', period: 'Today' };
 function segment(id, options, value, key) {
@@ -132,11 +132,13 @@ function renderControls() {
   if (!currentStore) return;
   const fulOpts = currentStore.ful;
   if (!fulOpts.includes(ctl.ful)) ctl.ful = fulOpts[0];
+  const srcOpts = ctl.period === 'Today' ? ['Internal orders', 'External orders'] : ['Internal orders'];
+  if (!srcOpts.includes(ctl.src)) ctl.src = srcOpts[0];
   const typeOpts = ctl.src === 'External orders' ? ['Same day delivery']
     : ctl.period === 'Today' ? ['Fast delivery', 'Same day delivery'] : ['Next day delivery'];
   if (!typeOpts.includes(ctl.type)) ctl.type = typeOpts[0];
   segment('seg-ful', fulOpts, ctl.ful, 'ful');
-  segment('seg-src', ['Internal orders', 'External orders'], ctl.src, 'src');
+  segment('seg-src', srcOpts, ctl.src, 'src');
   segment('seg-type', typeOpts, ctl.type, 'type');
   const collect = ctl.ful === 'Collect';
   $('seg-src').hidden = collect;
