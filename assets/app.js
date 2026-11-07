@@ -33,6 +33,11 @@ const STORES = [
   { name: 'Lampraki 200, Glyfada', cap: 700, booked: 690, avail: 10, fullSlots: 8, fc: 830, ex: '+19%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
   { name: 'Agiou Dimitriou 81, Kalamata', cap: 500, booked: 330, avail: 170, fullSlots: 0, fc: 410, ex: '−18%', exClass: 'extra-ok', status: 'On track', tone: 'ok' }
 ];
+const COLLECT_ONLY = ['Korinthou 15', 'Marathonos 20', 'Iroon Polytechniou 55', 'Gounari 4'];
+const DELIVERY_ONLY = ['25is Avgoustou 30', 'Alexandras 50', 'Irakleiou 400', 'Dimokratias 15', 'Agiou Dimitriou 81'];
+STORES.forEach(s => {
+  s.ful = COLLECT_ONLY.some(n => s.name.startsWith(n)) ? ['Collect'] : DELIVERY_ONLY.some(n => s.name.startsWith(n)) ? ['Delivery'] : ['Delivery', 'Collect'];
+});
 const RANK = { 'No pickers': 0, 'Almost full': 1, 'High demand': 2, 'On track': 3 };
 STORES.sort((a, b) => (RANK[a.status] - RANK[b.status]) || ((b.cap ? b.booked / b.cap : 0) - (a.cap ? a.booked / a.cap : 0)));
 const ALL_TOTALS = ['cap', 'booked', 'avail', 'fc'].reduce((t, k) => (t[k] = STORES.reduce((s, x) => s + x[k], 0), t), {});
@@ -64,7 +69,6 @@ function shiftsFor(store) {
 let SHIFTS = [];
 let currentStore = null;
 const REASONS = ['Staff shortage', 'Vehicle issue', 'High demand', 'Store event', 'Other'];
-const DATES = [['All 7 days'], ['Today', true], ['Fri 16'], ['Sat 17'], ['Sun 18', false, true], ['Mon 19'], ['Tue 20'], ['Wed 21']];
 const $ = id => document.getElementById(id);
 const icon = n => `<svg class="icon"><use href="#i-${n}"/></svg>`;
 
@@ -98,7 +102,6 @@ function renderRows() {
     </tr>`; }).join('')).join('');
 }
 
-$('dates').innerHTML = DATES.map(([l, on, off]) => `<button class="chip" type="button" aria-pressed="${!!on}"${off ? ' disabled' : ''}>${icon('check')}${l}</button>`).join('');
 $('reasons').innerHTML = REASONS.map(r => `<button class="chip" type="button" data-reason="${r}" aria-pressed="false">${icon('check')}${r}</button>`).join('');
 
 /* Single-select groups: shows selection only, the example data stays the same. */
@@ -107,6 +110,38 @@ document.querySelectorAll('[data-single]').forEach(g => g.addEventListener('clic
   if (!b || b.disabled) return;
   g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
 }));
+
+/* Store page controls, as in Figma "Store page — Controls states":
+   1 Delivery · Internal · Today → Fast | Same day
+   2 Delivery · Internal · other day → Next day only
+   3 Delivery · External (Bolt, Wolt) → Same day only
+   4 Collect → no order source or delivery type */
+const ctl = { ful: 'Delivery', src: 'Internal orders', type: 'Fast delivery', period: 'Today' };
+function segment(id, options, value, key) {
+  const el = $(id);
+  el.innerHTML = options.map(o => `<button type="button" aria-pressed="${o === value}">${o}</button>`).join('');
+  el.classList.toggle('single', options.length === 1);
+  el.onclick = e => {
+    const b = e.target.closest('button');
+    if (!b || b.getAttribute('aria-pressed') === 'true') return;
+    ctl[key] = b.textContent;
+    renderControls();
+  };
+}
+function renderControls() {
+  if (!currentStore) return;
+  const fulOpts = currentStore.ful;
+  if (!fulOpts.includes(ctl.ful)) ctl.ful = fulOpts[0];
+  const typeOpts = ctl.src === 'External orders' ? ['Same day delivery']
+    : ctl.period === 'Today' ? ['Fast delivery', 'Same day delivery'] : ['Next day delivery'];
+  if (!typeOpts.includes(ctl.type)) ctl.type = typeOpts[0];
+  segment('seg-ful', fulOpts, ctl.ful, 'ful');
+  segment('seg-src', ['Internal orders', 'External orders'], ctl.src, 'src');
+  segment('seg-type', typeOpts, ctl.type, 'type');
+  const collect = ctl.ful === 'Collect';
+  $('seg-src').hidden = collect;
+  $('seg-type').hidden = collect;
+}
 
 $('menu-toggle').addEventListener('click', () => {
   const c = $('app').classList.toggle('collapsed');
@@ -336,6 +371,7 @@ function setKpis(v) {
 $('store-rows').innerHTML = STORES.map((s, i) => `
   <tr class="store-row${s.off ? ' off' : ''}">
     <td class="s-name"><button class="store-link" type="button" data-open-store="${i}">${s.name}</button></td>
+    <td class="c-row" data-label="Fulfilment:">${s.ful.join(', ')}</td>
     <td class="c-row" data-label="Used:"><div class="booked"><span>${s.cap ? `${fmt(s.booked)} of ${fmt(s.cap)}` : '–'}</span><div class="bar"><i style="width:${s.cap ? Math.round(s.booked / s.cap * 100) : 0}%"></i></div></div></td>
     <td class="c-row" data-label="Available:">${s.avail}</td>
     <td class="c-row" data-label="Full slots:">${s.cap ? `${s.fullSlots} of 11` : '–'}</td>
@@ -361,12 +397,15 @@ window.addEventListener('resize', fitStores);
 function showStore(store) {
   currentStore = store;
   $('app').classList.toggle('overview', !store);
-  $('order-method').hidden = !store;
   $('stores-view').hidden = !!store;
+  if ($('store-controls')) $('store-controls').hidden = !store;
   $('store-view').hidden = !store;
   $('store').setValue(store ? store.name : 'All stores');
   setKpis(store || ALL_TOTALS);
   if (store) {
+    $('store-title').textContent = store.name;
+    $('store-ful').querySelector('b').textContent = store.ful.join(', ');
+    renderControls();
     store.shifts = store.shifts || shiftsFor(store);
     SHIFTS = store.shifts;
     renderRows();
@@ -399,5 +438,14 @@ $('store-rows').addEventListener('click', e => {
   const b = e.target.closest('[data-open-store]');
   if (b) requestStore(STORES[Number(b.dataset.openStore)]);
 });
+$('period').addEventListener('choose', e => { ctl.period = e.detail; renderControls(); });
+/* Mobile keeps the switches above the card, desktop inside it under the toolbar */
+function placeControls() {
+  const c = $('store-controls'), paper = $('store-view');
+  if (mobile.matches) paper.before(c); else paper.querySelector('.ful-row').after(c);
+  c.hidden = !currentStore;
+}
+mobile.addEventListener('change', placeControls);
 const deep = new URLSearchParams(location.search).get('store');
 showStore(STORES.find(s => s.name === deep) || null);
+placeControls();

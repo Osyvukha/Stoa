@@ -6,7 +6,7 @@
 <title>Capacity · AB Store Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=3">
+<link rel="stylesheet" href="assets/styles.css?v=4">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -60,9 +60,9 @@
     <header class="navbar">
       <h1>Capacity</h1>
       <button class="icon-btn" id="burger" type="button" aria-label="Open menu"><svg class="icon"><use href="#i-menu"></use></svg></button>
-      <div class="store"><span>Store</span>
-        <div class="select" id="store" data-label="Store" data-options="All stores|Korinthou 15, Patras|Kifisias 120, Marousi|Vouliagmenis 45, Glyfada|Patission 88, Athens|Mesogeion 210, Cholargos|Tsimiski 32, Thessaloniki"><button class="select-control" id="store-control" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="store-list" aria-label="Store"><span class="select-value">Vouliagmenis 45, Glyfada</span><svg class="icon"><use href="#i-chev-down"></use></svg></button>
-    <ul class="select-list" id="store-list" role="listbox" aria-label="Store" hidden=""><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>All stores</span></li><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>Korinthou 15, Patras</span></li><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>Kifisias 120, Marousi</span></li><li role="option" aria-selected="true"><svg class="icon"><use href="#i-check"></use></svg><span>Vouliagmenis 45, Glyfada</span></li><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>Patission 88, Athens</span></li><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>Mesogeion 210, Cholargos</span></li><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>Tsimiski 32, Thessaloniki</span></li></ul></div>
+      <div class="pickers">
+        <div class="store"><span>Store</span><div class="select" id="store" data-label="Store" data-options="All stores"></div></div>
+        <div class="store period"><span>Period</span><div class="select" id="period" data-label="Period" data-options="Today|Fri 16|Sat 17|Mon 19|Tue 20|Wed 21"></div></div>
       </div>
     </header>
 
@@ -74,183 +74,52 @@
       <div class="kpi"><div class="kpi-top">Orders forecast<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-fc">980</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+9%</b>vs last week</div></div></div>
     </section>
 
-    <section class="controls" aria-label="Filters">
-      <div class="filters">
-        <div class="segmented" id="order-method" data-single="" role="group" aria-label="Order method"><button type="button" aria-pressed="true">Delivery</button><button type="button" aria-pressed="false">Click &amp; collect</button></div>
-      </div>
-      <div class="chips scroll" data-single="" role="group" aria-label="Date" id="dates"><button class="chip" type="button" aria-pressed="true"><svg class="icon"><use href="#i-check"></use></svg>Today</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Fri 16</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Sat 17</button><button class="chip" type="button" aria-pressed="false" disabled=""><svg class="icon"><use href="#i-check"></use></svg>Sun 18</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Mon 19</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Tue 20</button><button class="chip" type="button" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Wed 21</button></div>
-    </section>
 
     <section class="paper" id="stores-view" hidden="">
       <div class="toolbar"><h2 id="stores-title">Stores</h2></div>
-      <div class="scroll-frame" id="stores-frame">
-      <div class="table-wrap stores-scroll" tabindex="0" role="region" aria-label="All stores today">
-        <table class="stores-table">
-          <colgroup><col style="width:25%"><col style="width:21%"><col style="width:10%"><col style="width:11%"><col style="width:18%"><col style="width:15%"></colgroup>
-          <thead>
-            <tr><th rowspan="2" scope="col">Store</th><th colspan="2" class="group" scope="colgroup">Capacity (Orders)</th><th rowspan="2" scope="col">Full slots</th><th rowspan="2" scope="col">Orders forecast</th><th rowspan="2" scope="col">Status</th></tr>
-            <tr><th scope="col">Used</th><th scope="col">Available</th></tr>
-          </thead>
-          <tbody id="store-rows">
-  <tr class="store-row off">
-    <td class="s-name"><button class="store-link" type="button" data-open-store="0">Korinthou 15, Patras</button></td>
-    <td class="c-row" data-label="Booked:"><div class="booked"><span>–</span><div class="bar"><i style="width:0%"></i></div></div></td>
-    <td class="c-row" data-label="Available:">0</td>
-    <td class="c-row" data-label="Full slots:">–</td>
-    <td class="c-row" data-label="Orders forecast:"><span class="two-line">420<small class="">No capacity</small></span></td>
-    <td class="s-status"><span class="badge none">No pickers</span></td>
-  </tr>
-  <tr class="store-row">
-    <td class="s-name"><button class="store-link" type="button" data-open-store="1">Vouliagmenis 45, Glyfada</button></td>
-    <td class="c-row" data-label="Booked:"><div class="booked"><span>745 of 760</span><div class="bar"><i style="width:98%"></i></div></div></td>
-    <td class="c-row" data-label="Available:">15</td>
-    <td class="c-row" data-label="Full slots:">6 of 11</td>
-    <td class="c-row" data-label="Orders forecast:"><span class="two-line">980<small class="extra-high">+29%<span class="vs"> vs capacity</span></small></span></td>
-    <td class="s-status"><span class="badge full">Almost full</span></td>
-  </tr>
-  <tr class="store-row">
-    <td class="s-name"><button class="store-link" type="button" data-open-store="2">Kifisias 120, Marousi</button></td>
-    <td class="c-row" data-label="Booked:"><div class="booked"><span>790 of 880</span><div class="bar"><i style="width:90%"></i></div></div></td>
-    <td class="c-row" data-label="Available:">90</td>
-    <td class="c-row" data-label="Full slots:">3 of 11</td>
-    <td class="c-row" data-label="Orders forecast:"><span class="two-line">1,047<small class="extra-high">+19%<span class="vs"> vs capacity</span></small></span></td>
-    <td class="s-status"><span class="badge low">High demand</span></td>
-  </tr>
-  <tr class="store-row">
-    <td class="s-name"><button class="store-link" type="button" data-open-store="3">Patission 88, Athens</button></td>
-    <td class="c-row" data-label="Booked:"><div class="booked"><span>560 of 640</span><div class="bar"><i style="width:88%"></i></div></div></td>
-    <td class="c-row" data-label="Available:">80</td>
-    <td class="c-row" data-label="Full slots:">2 of 11</td>
-    <td class="c-row" data-label="Orders forecast:"><span class="two-line">690<small class="extra-mid">+8%<span class="vs"> vs capacity</span></small></span></td>
-    <td class="s-status"><span class="badge low">High demand</span></td>
-  </tr>
-  <tr class="store-row">
-    <td class="s-name"><button class="store-link" type="button" data-open-store="4">Mesogeion 210, Cholargos</button></td>
-    <td class="c-row" data-label="Booked:"><div class="booked"><span>490 of 700</span><div class="bar"><i style="width:70%"></i></div></div></td>
-    <td class="c-row" data-label="Available:">210</td>
-    <td class="c-row" data-label="Full slots:">0 of 11</td>
-    <td class="c-row" data-label="Orders forecast:"><span class="two-line">610<small class="extra-ok">−13%<span class="vs"> vs capacity</span></small></span></td>
-    <td class="s-status"><span class="badge ok">On track</span></td>
-  </tr>
-  <tr class="store-row">
-    <td class="s-name"><button class="store-link" type="button" data-open-store="5">Tsimiski 32, Thessaloniki</button></td>
-    <td class="c-row" data-label="Booked:"><div class="booked"><span>520 of 820</span><div class="bar"><i style="width:63%"></i></div></div></td>
-    <td class="c-row" data-label="Available:">300</td>
-    <td class="c-row" data-label="Full slots:">0 of 11</td>
-    <td class="c-row" data-label="Orders forecast:"><span class="two-line">640<small class="extra-ok">−22%<span class="vs"> vs capacity</span></small></span></td>
-    <td class="s-status"><span class="badge ok">On track</span></td>
-  </tr></tbody>
-        </table>
-      </div>
+      <div class="stores-x">
+        <div class="stores-head" aria-hidden="true">
+          <table class="stores-table">
+            <colgroup><col style="width:25.7%"><col style="width:13.3%"><col style="width:14.8%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:13.4%"></colgroup>
+            <thead>
+              <tr><th rowspan="2">Store</th><th rowspan="2">Fulfilment</th><th colspan="2" class="group">Fulfillment capacity (Orders)</th><th rowspan="2">Full slots</th><th rowspan="2">Orders forecast</th><th rowspan="2">Status</th></tr>
+              <tr><th>Used</th><th>Available</th></tr>
+            </thead>
+          </table>
+        </div>
+        <div class="scroll-frame" id="stores-frame">
+          <div class="stores-scroll" tabindex="0" role="region" aria-label="All stores">
+            <table class="stores-table">
+              <colgroup><col style="width:25.7%"><col style="width:13.3%"><col style="width:14.8%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:13.4%"></colgroup>
+              <thead class="sr-only">
+                <tr><th scope="col">Store</th><th scope="col">Fulfilment</th><th scope="col">Used</th><th scope="col">Available</th><th scope="col">Full slots</th><th scope="col">Orders forecast</th><th scope="col">Status</th></tr>
+              </thead>
+              <tbody id="store-rows"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="paper" id="store-view">
       <div class="toolbar">
-        <h2>Overview</h2>
+        <h2 id="store-title">Store</h2>
         <div class="save-bar"><button class="btn btn-filled" id="save" type="button">Save changes</button></div>
+      </div>
+      <p class="ful-row" id="store-ful"><span>Fulfilment:</span><b></b></p>
+      <div class="store-controls" id="store-controls" role="group" aria-label="Shift filters">
+        <div class="segmented" id="seg-ful" role="group" aria-label="Fulfilment"></div>
+        <div class="segmented" id="seg-src" role="group" aria-label="Order source"></div>
+        <div class="segmented" id="seg-type" role="group" aria-label="Delivery type"></div>
       </div>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Capacity by shift and time slot">
         <table>
           <colgroup><col style="width:13.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:10.8%"><col style="width:9.6%"><col style="width:10.8%"><col style="width:13.6%"></colgroup>
           <thead>
-            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup">Capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
+            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
             <tr><th scope="col">Total</th><th scope="col">Used</th><th scope="col">Reserved</th><th scope="col">Available</th></tr>
           </thead>
-          <tbody id="rows">
-  <tr class="shift-row" data-shift="a">
-    <td class="shift-cell"><div class="shift-inner">
-      <button class="toggle" type="button" data-toggle="a" aria-expanded="true" aria-label="Shift A time slots"><svg class="icon"><use href="#i-chev-down"></use></svg></button>
-      <span class="two-line">Shift A<small>08:00 – 12:00</small></span>
-    </div></td>
-    <td><div class="number" data-kind="pickers"><input id="pickers-a" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Shift A pickers">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Shift A pickers"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Shift A pickers"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-    <td colspan="7"><span class="unsaved" id="unsaved-a" hidden="">0 unsaved changes</span></td>
-  </tr><tr data-slot-of="a">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">08:00 – 09:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-a-0" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 08:00 – 09:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 08:00 – 09:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 08:00 – 09:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">78</td><td class="c-row" data-label="Used:">72</td><td class="c-row" data-label="Reserved:">6</td><td class="c-avail"><span class="badge full">Full</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">101<small class="extra-ok">+3% extra</small></span></td>
-    </tr><tr data-slot-of="a">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">09:00 – 10:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-a-1" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 09:00 – 10:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 09:00 – 10:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 09:00 – 10:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">70</td><td class="c-row" data-label="Used:">62</td><td class="c-row" data-label="Reserved:">5</td><td class="c-avail"><span class="badge low">3 left</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">90<small class="extra-mid">+12% extra</small></span></td>
-    </tr><tr data-slot-of="a">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">10:00 – 11:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-a-2" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 10:00 – 11:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 10:00 – 11:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 10:00 – 11:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">44</td><td class="c-row" data-label="Used:">40</td><td class="c-row" data-label="Reserved:">4</td><td class="c-avail"><span class="badge full">Full</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">56<small class="extra-ok">+2% extra</small></span></td>
-    </tr><tr data-slot-of="a">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">11:00 – 12:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-a-3" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 11:00 – 12:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 11:00 – 12:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 11:00 – 12:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">78</td><td class="c-row" data-label="Used:">69</td><td class="c-row" data-label="Reserved:">6</td><td class="c-avail"><span class="badge low">3 left</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">101<small class="extra-high">+22% extra</small></span></td>
-    </tr>
-  <tr class="shift-row" data-shift="b">
-    <td class="shift-cell"><div class="shift-inner">
-      <button class="toggle" type="button" data-toggle="b" aria-expanded="true" aria-label="Shift B time slots"><svg class="icon"><use href="#i-chev-down"></use></svg></button>
-      <span class="two-line">Shift B<small>12:00 – 16:00</small></span>
-    </div></td>
-    <td><div class="number" data-kind="pickers"><input id="pickers-b" type="text" inputmode="numeric" value="4" data-saved="4" aria-label="Shift B pickers">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Shift B pickers"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Shift B pickers"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-    <td colspan="7"><span class="unsaved" id="unsaved-b" hidden="">0 unsaved changes</span></td>
-  </tr><tr data-slot-of="b">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">12:00 – 13:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-b-0" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 12:00 – 13:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 12:00 – 13:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 12:00 – 13:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">86</td><td class="c-row" data-label="Used:">79</td><td class="c-row" data-label="Reserved:">7</td><td class="c-avail"><span class="badge full">Full</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">111<small class="extra-high">+25% extra</small></span></td>
-    </tr><tr data-slot-of="b">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">13:00 – 14:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-b-1" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 13:00 – 14:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 13:00 – 14:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 13:00 – 14:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">95</td><td class="c-row" data-label="Used:">84</td><td class="c-row" data-label="Reserved:">7</td><td class="c-avail"><span class="badge low">4 left</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">122<small class="extra-mid">+9% extra</small></span></td>
-    </tr><tr data-slot-of="b">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">14:00 – 15:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-b-2" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 14:00 – 15:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 14:00 – 15:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 14:00 – 15:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">34</td><td class="c-row" data-label="Used:">31</td><td class="c-row" data-label="Reserved:">3</td><td class="c-avail"><span class="badge full">Full</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">44<small class="extra-ok">+1% extra</small></span></td>
-    </tr><tr data-slot-of="b">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">15:00 – 16:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-b-3" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 15:00 – 16:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 15:00 – 16:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 15:00 – 16:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">69</td><td class="c-row" data-label="Used:">62</td><td class="c-row" data-label="Reserved:">5</td><td class="c-avail"><span class="badge low">2 left</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">89<small class="extra-ok">+6% extra</small></span></td>
-    </tr>
-  <tr class="shift-row" data-shift="c">
-    <td class="shift-cell"><div class="shift-inner">
-      <button class="toggle" type="button" data-toggle="c" aria-expanded="false" aria-label="Shift C time slots"><svg class="icon"><use href="#i-chev-down"></use></svg></button>
-      <span class="two-line">Shift C<small>16:00 – 19:00</small></span>
-    </div></td>
-    <td><div class="number" data-kind="pickers"><input id="pickers-c" type="text" inputmode="numeric" value="2" data-saved="2" aria-label="Shift C pickers">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Shift C pickers"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Shift C pickers"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-    <td colspan="7"><span class="unsaved" id="unsaved-c" hidden="">0 unsaved changes</span></td>
-  </tr><tr data-slot-of="c" hidden="">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">16:00 – 17:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-c-0" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 16:00 – 17:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 16:00 – 17:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 16:00 – 17:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">43</td><td class="c-row" data-label="Used:">40</td><td class="c-row" data-label="Reserved:">3</td><td class="c-avail"><span class="badge full">Full</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">55<small class="extra-ok">+4% extra</small></span></td>
-    </tr><tr data-slot-of="c" hidden="">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">17:00 – 18:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-c-1" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 17:00 – 18:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 17:00 – 18:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 17:00 – 18:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">77</td><td class="c-row" data-label="Used:">71</td><td class="c-row" data-label="Reserved:">6</td><td class="c-avail"><span class="badge full">Full</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">100<small class="extra-mid">+15% extra</small></span></td>
-    </tr><tr data-slot-of="c" hidden="">
-      <td class="blank"></td><td class="blank"></td><td class="c-time">18:00 – 19:00</td>
-      <td class="c-row c-del" data-label="Delivery:"><div class="number" data-kind="delivery"><input id="delivery-c-2" type="text" inputmode="numeric" value="3" data-saved="3" aria-label="Delivery 18:00 – 19:00">
-    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase Delivery 18:00 – 19:00"><svg class="icon"><use href="#i-chev-up"></use></svg></button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease Delivery 18:00 – 19:00"><svg class="icon"><use href="#i-chev-down"></use></svg></button></div></div></td>
-      <td class="c-group">Orders capacity</td><td class="c-row" data-label="Full:">86</td><td class="c-row" data-label="Used:">76</td><td class="c-row" data-label="Reserved:">7</td><td class="c-avail"><span class="badge low">3 left</span></td>
-      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">111<small class="extra-high">+20% extra</small></span></td>
-    </tr></tbody>
+          <tbody id="rows"></tbody>
         </table>
       </div>
     </section>
@@ -295,6 +164,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" hidden=""><svg class="icon" id="toast-icon"><use href="#i-info"></use></svg><span id="toast-text"></span></div>
-<script src="assets/app.js?v=3"></script>
+<script src="assets/app.js?v=4"></script>
 </body>
 </html>
