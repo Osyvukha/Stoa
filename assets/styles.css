@@ -91,6 +91,11 @@ h1 { margin: 0; font-size: 26px; line-height: 1.35; font-weight: 700; }
 .segmented { display: inline-flex; padding: 4px; background: var(--chip); border-radius: var(--radius); }
 .segmented button { border: 0; background: transparent; border-radius: 6px; padding: 2px 10px; height: 28px; color: var(--dimmed); font-weight: 500; }
 .segmented.single button { cursor: default; }
+.seg-off { position: relative; display: inline-flex; outline: none; }
+.seg-off button:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+.seg-off .tip { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #212529; color: #fff; font-size: 14px; line-height: 1.4; padding: 6px 10px; border-radius: 4px; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity .15s; z-index: 20; pointer-events: none; }
+.seg-off .tip::before { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-bottom-color: #212529; }
+.seg-off:hover .tip, .seg-off:focus .tip, .seg-off.show .tip { opacity: 1; visibility: visible; }
 .segmented button[aria-pressed="true"] { background: var(--body); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { height: 28px; padding: 0 20px; border: 0; border-radius: 1000px; background: var(--chip); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -230,6 +235,7 @@ textarea.invalid { border-color: var(--red); }
   .store-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sm); }
   .store-controls .segmented { display: flex; }
   .store-controls .segmented button { flex: 1; }
+  .store-controls .seg-off { flex: 1; }
   .ful-row { display: flex; }
   .stores-head { display: none; }
   .stores-x { overflow: visible; }

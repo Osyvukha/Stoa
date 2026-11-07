@@ -117,13 +117,15 @@ document.querySelectorAll('[data-single]').forEach(g => g.addEventListener('clic
    3 Delivery · External (Bolt, Wolt) → Today only, Same day only
    4 Collect → no order source or delivery type */
 const ctl = { ful: 'Delivery', src: 'Internal orders', type: 'Fast delivery', period: 'Today' };
-function segment(id, options, value, key) {
+function segment(id, options, value, key, disabled = {}) {
   const el = $(id);
-  el.innerHTML = options.map(o => `<button type="button" aria-pressed="${o === value}">${o}</button>`).join('');
+  el.innerHTML = options.map(o => disabled[o]
+    ? `<span class="seg-off" tabindex="0" data-tip="${disabled[o]}"><button type="button" aria-pressed="false" disabled aria-describedby="${id}-tip">${o}</button><span class="tip" role="tooltip" id="${id}-tip">${disabled[o]}</span></span>`
+    : `<button type="button" aria-pressed="${o === value}">${o}</button>`).join('');
   el.classList.toggle('single', options.length === 1);
   el.onclick = e => {
     const b = e.target.closest('button');
-    if (!b || b.getAttribute('aria-pressed') === 'true') return;
+    if (!b || b.disabled || b.getAttribute('aria-pressed') === 'true') return;
     ctl[key] = b.textContent;
     renderControls();
   };
@@ -132,13 +134,13 @@ function renderControls() {
   if (!currentStore) return;
   const fulOpts = currentStore.ful;
   if (!fulOpts.includes(ctl.ful)) ctl.ful = fulOpts[0];
-  const srcOpts = ctl.period === 'Today' ? ['Internal orders', 'External orders'] : ['Internal orders'];
-  if (!srcOpts.includes(ctl.src)) ctl.src = srcOpts[0];
+  const extOff = ctl.period !== 'Today';
+  if (extOff) ctl.src = 'Internal orders';
   const typeOpts = ctl.src === 'External orders' ? ['Same day delivery']
     : ctl.period === 'Today' ? ['Fast delivery', 'Same day delivery'] : ['Next day delivery'];
   if (!typeOpts.includes(ctl.type)) ctl.type = typeOpts[0];
   segment('seg-ful', fulOpts, ctl.ful, 'ful');
-  segment('seg-src', srcOpts, ctl.src, 'src');
+  segment('seg-src', ['Internal orders', 'External orders'], ctl.src, 'src', extOff ? { 'External orders': 'Available for today only' } : {});
   segment('seg-type', typeOpts, ctl.type, 'type');
   const collect = ctl.ful === 'Collect';
   $('seg-src').hidden = collect;
