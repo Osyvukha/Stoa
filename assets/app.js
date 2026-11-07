@@ -84,7 +84,8 @@ function badge(left, cap) {
 function extraClass(p) { return p >= 20 ? 'extra-high' : p >= 9 ? 'extra-mid' : 'extra-ok'; }
 
 function renderRows() {
-  $('rows').innerHTML = SHIFTS.map(s => `
+  $('rows').innerHTML = SHIFTS.map((s, si) => (s.section && s.section !== (SHIFTS[si - 1] || {}).section
+    ? `<tr class="section-row"><th colspan="9" scope="rowgroup"><span>${s.section}</span></th></tr>` : '') + `
   <tr class="shift-row" data-shift="${s.id}">
     <td class="shift-cell"><div class="shift-inner">
       <button class="toggle" type="button" data-toggle="${s.id}" aria-expanded="${!!s.open}" aria-label="${s.name} time slots">${icon('chev-down')}</button>
@@ -359,9 +360,7 @@ function applyDefaults() {
   $('app').classList.remove('menu-open', 'collapsed');
   if (!document.body.classList.contains('open')) document.documentElement.style.overflow = '';
   if (!SHIFTS.length) return;
-  setShift(SHIFTS[0], true);
-  setShift(SHIFTS[1], !mobile.matches);
-  setShift(SHIFTS[2], false);
+  SHIFTS.forEach((s, i) => setShift(s, i === 0 || (i === 1 && !mobile.matches && compare === '1')));
   refresh();
 }
 mobile.addEventListener('change', applyDefaults);
@@ -398,12 +397,47 @@ function fitStores() {
 }
 window.addEventListener('resize', fitStores);
 
+/* Prototype only: compare Option 1 (switches) with Option 4 (shift groups as sections) */
+let compare = new URLSearchParams(location.search).get('opt') === '4' ? '4' : '1';
+function sectionShifts(store) {
+  const key = 'opt4-' + (ctl.period === 'Today' ? 'today' : 'other');
+  if (store[key]) return store[key];
+  const base = store.shifts;
+  const copy = (sh, id, section, extra = {}) => ({ ...sh, ...extra, id, section, open: false, slots: sh.slots.map(r => [...r]) });
+  const out = [];
+  if (store.ful.includes('Delivery')) {
+    if (ctl.period === 'Today') {
+      out.push(copy(base[0], 'fd-a', 'Fast delivery · Internal orders'));
+      out.push(copy(base[1], 'sd-b', 'Same day delivery · Internal orders'));
+      out.push(copy(base[2], 'ex-c', 'Same day delivery · Bolt / Wolt'));
+    } else base.forEach(sh => out.push(copy(sh, 'nd-' + sh.id, 'Next day delivery · Internal orders')));
+  }
+  if (store.ful.includes('Collect')) out.push(copy(base[2], 'col', 'Collect', { name: 'Collect shift', hours: '10:00 – 20:00' }));
+  return (store[key] = out);
+}
+function renderStoreBody() {
+  if (!currentStore) return;
+  $('compare').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.opt === compare));
+  $('store-controls').classList.toggle('opt4', compare === '4');
+  SHIFTS = compare === '4' ? sectionShifts(currentStore) : currentStore.shifts;
+  renderRows();
+  applyDefaults();
+}
+$('compare').addEventListener('click', e => {
+  const b = e.target.closest('[data-opt]');
+  if (!b || b.dataset.opt === compare) return;
+  compare = b.dataset.opt;
+  const u = new URL(location.href); u.searchParams.set('opt', compare); history.replaceState(null, '', u);
+  renderStoreBody();
+});
+
 function showStore(store) {
   currentStore = store;
   $('app').classList.toggle('overview', !store);
   $('stores-view').hidden = !!store;
   if ($('store-controls')) $('store-controls').hidden = !store;
   $('store-view').hidden = !store;
+  $('compare').hidden = !store;
   $('store').setValue(store ? store.name : 'All stores');
   setKpis(store || ALL_TOTALS);
   if (store) {
@@ -411,9 +445,7 @@ function showStore(store) {
     $('store-ful').querySelector('b').textContent = store.ful.join(', ');
     renderControls();
     store.shifts = store.shifts || shiftsFor(store);
-    SHIFTS = store.shifts;
-    renderRows();
-    applyDefaults();
+    renderStoreBody();
   } else {
     SHIFTS = [];
     $('rows').innerHTML = '';
@@ -442,7 +474,7 @@ $('store-rows').addEventListener('click', e => {
   const b = e.target.closest('[data-open-store]');
   if (b) requestStore(STORES[Number(b.dataset.openStore)]);
 });
-$('period').addEventListener('choose', e => { ctl.period = e.detail; renderControls(); });
+$('period').addEventListener('choose', e => { ctl.period = e.detail; renderControls(); if (compare === '4') renderStoreBody(); });
 /* Mobile keeps the switches above the card, desktop inside it under the toolbar */
 function placeControls() {
   const c = $('store-controls'), paper = $('store-view');
