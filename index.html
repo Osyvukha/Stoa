@@ -163,7 +163,7 @@ tr.ch-row.off td { background: var(--line); }
 tr.ch-row.off .ch-box { background: transparent; }
 .c-split { display: none; }
 .chan-note { margin: 0; font-size: 12px; color: var(--dimmed); }
-/* Option B: external capacity is part of Total, shown under it */
+/* External share of Used, shown under the Used value */
 .ext-line { display: block; font-size: 12px; font-weight: 400; color: var(--dimmed); white-space: nowrap; }
 #store-view.collect-mode .ext-line { display: none; }
 /* Collect orders are all internal, so there is no channel breakdown */
@@ -318,7 +318,6 @@ textarea.invalid { border-color: var(--red); }
   .c-row .two-line { display: flex; align-items: center; gap: var(--xs); }
   .c-row .two-line small { display: inline; }
   .c-row .was { display: inline; margin-left: var(--xs); }
-  .c-full .ext-line { display: inline; margin-left: var(--xs); }
 
   /* All stores list */
   .app.overview main { padding-bottom: 20px; }
@@ -425,7 +424,7 @@ textarea.invalid { border-color: var(--red); }
       </div>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Capacity by shift and time slot">
         <table>
-          <colgroup><col style="width:132px"><col style="width:92px"><col style="width:116px"><col style="width:92px"><col style="width:128px"><col style="width:100px"><col style="width:96px"><col style="width:108px"><col style="width:136px"></colgroup>
+          <colgroup><col style="width:132px"><col style="width:92px"><col style="width:116px"><col style="width:92px"><col style="width:108px"><col style="width:120px"><col style="width:96px"><col style="width:108px"><col style="width:136px"></colgroup>
           <thead>
             <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup" id="cap-group">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
             <tr><th scope="col">Total</th><th scope="col">Used</th><th scope="col">Reserved</th><th scope="col">Available</th></tr>
@@ -565,8 +564,6 @@ function channelsFor(r, gi) {
   return { internal: [['Next day', v[0]]], external: [['Skroutz', v[1]]] };
 }
 const openCh = new Set();
-/* External capacity is part of Total. Share of Total per slot (Kifisias 120 from Figma v2), never below external orders already used */
-const EXT_SHARE = [45/90, 40/80, 28/50, 45/90, 35/100, 55/110, 22/40, 40/80, 28/50, 45/90, 40/100];
 const fullNow = {};
 let fulfil = 'Delivery';
 const chNow = {};
@@ -713,12 +710,11 @@ function updateChannels() {
   SHIFTS.forEach(s => s.slots.forEach((r, i) => {
     const key = `${s.id}-${i}`, info = channelsFor(r, gi++);
     chNow[key] = { used: r[3], info };
-    const full = fullNow[key] ?? r[2], extUsed = info.external.reduce((a, [, v]) => a + v, 0);
-    const ext = full ? Math.min(full, Math.max(Math.round(EXT_SHARE[gi - 1] * full), extUsed)) : 0;
-    const slotRow = document.querySelectorAll(`[data-slot-of="${s.id}"]`)[i], cell = slotRow && slotRow.querySelector('.c-full');
+    const extUsed = info.external.reduce((a, [, v]) => a + v, 0);
+    const slotRow = document.querySelectorAll(`[data-slot-of="${s.id}"]`)[i], cell = slotRow && slotRow.querySelector('.c-used');
     if (cell) {
       cell.querySelectorAll('.ext-line').forEach(x => x.remove());
-      if (full) cell.insertAdjacentHTML('beforeend', `<small class="ext-line">${ext} external · ${Math.round(ext / full * 100)}%</small>`);
+      if (r[3]) cell.insertAdjacentHTML('beforeend', `<small class="ext-line">${extUsed} external · ${Math.round(extUsed / r[3] * 100)}%</small>`);
     }
     $('ch-box-' + key).innerHTML = `<div class="ch-line"><span class="ch-grp">Internal</span><span>${chVals(info.internal)}</span></div><div class="ch-line"><span class="ch-grp">External</span><span>${chVals(info.external)}</span></div>`;
     const sp = list => list.map(([n, v]) => `<div class="sp-r"><span>${n}:</span><b>${v}</b></div>`).join('');
