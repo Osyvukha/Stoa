@@ -1,57 +1,379 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Capacity · AB Store Dashboard</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>AB Capacity Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=10">
-</head>
-<body>
+<style>
+/* Layout: the Figma Capacity screen, 240px menu + content with 80px gutters. Tokens mirror Ahold Mantine Design System 2026, light mode. */
+:root {
+  --body: #fff; --page: #f8f9fa; --text: #000; --dimmed: #495057; --placeholder: #adb5bd;
+  --border-subtle: #dee2e6; --border: #ced4da; --line: #e9ecef; --chip: #f1f3f5; --overlay: rgba(0,0,0,.6);
+  --blue: #228be6; --blue-hover: #1c7ed6; --blue-light: rgba(34,139,230,.1); --blue-tile: #e7f5ff;
+  --red: #e03131; --red-text: #c92a2a; --red-bg: #ffe3e3;
+  --orange-text: #bb3e0d; --orange-bg: #ffe8cc; --amber: #a85700;
+  --green: #267b37; --green-bg: #d3f9d8; --teal: #099268;
+  --xs: 10px; --sm: 12px; --md: 16px; --lg: 20px; --xl: 32px; --radius: 8px;
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow-xl: 0 1px 3px rgba(0,0,0,.05), rgba(0,0,0,.05) 0 36px 28px -7px, rgba(0,0,0,.04) 0 17px 17px -7px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body { background: var(--page); color: var(--text); font: 400 14px/1.55 var(--font); font-variant-numeric: tabular-nums; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+svg { display: block; flex: none; }
+.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.app { display: flex; min-height: 100vh; }
+.app[inert] { user-select: none; }
+
+/* Menu */
+.menu { width: 240px; flex: none; position: sticky; top: env(safe-area-inset-top, 0px); align-self: flex-start; height: 100vh; overflow-y: auto; background: var(--body); border-right: 1px solid var(--line); padding-bottom: var(--xs); transition: width .15s ease; }
+.logo { height: 80px; display: flex; align-items: center; gap: 8px; padding: var(--md); }
+.logo-mark { width: 20px; height: 20px; border-radius: 4px; background: var(--blue); color: #fff; display: grid; place-items: center; }
+.logo-mark .icon { width: 14px; height: 14px; }
+.logo b { flex: 1; font-size: 16px; }
+.icon-btn { width: 34px; height: 34px; border: 0; border-radius: var(--radius); background: transparent; display: grid; place-items: center; }
+.icon-btn:hover { background: var(--blue-light); }
+.icon-btn .icon { width: 24px; height: 24px; }
+#menu-close, #burger, .c-group { display: none; }
+.menu-group { padding: 0 4px; }
+.menu-label { padding: 4px 10px; font-size: 12px; color: var(--dimmed); }
+.nav { display: flex; align-items: center; gap: var(--sm); min-height: 38px; padding: 8px var(--sm); color: var(--text); text-decoration: none; }
+.nav:hover { background: var(--page); }
+.nav.active { background: var(--blue-light); color: var(--blue); }
+.nav span { flex: 1; }
+.menu hr { border: 0; border-top: 1px solid var(--border-subtle); margin: 4px 0; }
+.select { position: relative; min-width: 0; }
+.select-control { width: 100%; height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--body); text-align: left; }
+.select-control:hover { background: var(--page); }
+.select-control:focus-visible, .select-control[aria-expanded="true"] { outline: 0; border-color: var(--blue); }
+.select-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.select-control > .icon { color: var(--dimmed); width: 16px; height: 16px; }
+.select-list { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none; background: var(--body); border: 1px solid var(--border-subtle); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,.05), rgba(0,0,0,.05) 0 10px 15px -5px, rgba(0,0,0,.04) 0 7px 7px -5px; }
+.select-list li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+.select-list li:hover, .select-list li.active { background: var(--page); }
+.select-list li .icon { width: 12px; height: 12px; color: var(--dimmed); visibility: hidden; }
+.select-list li[aria-selected="true"] .icon { visibility: visible; }
+.select-xs { width: 66px; flex: none; font-size: 12px; }
+.select-xs .select-control { height: 30px; padding: 0 6px 0 10px; gap: 4px; }
+.select-xs .select-control > .icon { width: 14px; height: 14px; }
+.select-xs .select-list { left: auto; width: 88px; }
+.select-xs .select-list li { padding: 5px 8px; gap: 6px; }
+.collapsed .menu { width: 64px; }
+.collapsed .menu .logo b, .collapsed .menu .logo-mark, .collapsed .menu .menu-label, .collapsed .menu .nav span, .collapsed .menu .select-xs { display: none; }
+.collapsed .menu .logo { justify-content: center; padding: var(--md) 0; }
+.collapsed .menu .nav { justify-content: center; }
+.collapsed #menu-toggle svg { transform: scaleX(-1); }
+
+/* Content */
+main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; padding-block: 20px 24px; padding-left: max(80px, env(safe-area-inset-left, 0px)); padding-right: max(80px, env(safe-area-inset-right, 0px)); }
+.inner { width: 100%; max-width: 1040px; display: contents; }
+.navbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sm); }
+h1 { margin: 0; font-size: 26px; line-height: 1.35; font-weight: 700; }
+.header-fields { display: flex; flex-wrap: wrap; gap: var(--md); flex: 0 1 620px; min-width: 0; }
+.store { display: flex; align-items: center; gap: var(--xs); min-width: 0; flex: 1 1 380px; }
+.store.period { flex: 0 1 220px; }
+.store .select { flex: 1; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--md); }
+.kpi { background: var(--body); border-radius: var(--radius); padding: var(--lg); display: flex; flex-direction: column; gap: var(--sm); min-width: 0; }
+.kpi-top { display: flex; align-items: center; justify-content: space-between; gap: var(--xs); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--dimmed); }
+.tile { width: 32px; height: 32px; border-radius: var(--radius); background: var(--blue-tile); color: var(--blue); display: grid; place-items: center; flex: none; }
+.tile .icon { width: 20px; height: 20px; }
+.kpi-value { font-size: 22px; font-weight: 700; line-height: 1.35; }
+.kpi { padding: var(--md); gap: var(--xs); }
+.kpi .tile { width: 22px; height: 22px; border-radius: 4px; }
+.kpi .tile .icon { width: 14px; height: 14px; }
+.kpi-main { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; column-gap: var(--xs); }
+.kpi-main .delta { flex-wrap: nowrap; white-space: nowrap; }
+.store-filters { margin-top: 0; }
+.toolbar-main { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sm) var(--lg); min-width: 0; }
+.fulfil-line { display: none; margin: 0; color: var(--dimmed); }
+.stores-wrap { max-height: 560px; overflow: auto; }
+.stores-wrap thead th { position: sticky; background: var(--body); z-index: 1; }
+.stores-wrap thead tr:first-child th { top: 0; }
+.stores-wrap thead tr:last-child th { top: 36px; }
+.delta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--dimmed); }
+.delta b { font-size: 14px; font-weight: 600; }
+.delta .up { color: var(--teal); } .delta .down { color: var(--red); }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sm); }
+.filters { display: flex; flex-wrap: wrap; gap: var(--sm); }
+.segmented { display: inline-flex; padding: 4px; background: var(--chip); border-radius: var(--radius); }
+.segmented button { border: 0; background: transparent; border-radius: 6px; padding: 2px 10px; height: 28px; color: var(--dimmed); font-weight: 500; }
+.segmented button[aria-pressed="true"] { background: var(--body); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--xs); }
+.chip { height: 28px; padding: 0 20px; border: 0; border-radius: 1000px; background: var(--chip); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.chip:hover:not(:disabled) { background: var(--line); }
+.chip .icon { width: 12px; height: 12px; display: none; }
+.chip[aria-pressed="true"] { background: var(--blue-light); color: var(--blue); padding: 0 var(--xs); }
+.chip[aria-pressed="true"] .icon { display: block; }
+.chip:disabled { background: var(--line); color: var(--placeholder); cursor: not-allowed; }
+
+/* Paper + table */
+.paper { background: var(--body); border-radius: var(--radius); padding: var(--lg); display: flex; flex-direction: column; gap: var(--md); min-width: 0; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sm); }
+h2 { margin: 0; font-size: 18px; line-height: 1.45; font-weight: 700; }
+.btn { height: 36px; padding: 0 18px; border-radius: var(--radius); font-weight: 600; border: 1px solid transparent; white-space: nowrap; }
+.btn-filled { background: var(--blue); color: #fff; }
+.btn-filled:hover { background: var(--blue-hover); }
+.btn-outline { background: transparent; border-color: var(--blue); color: var(--blue); }
+.btn-outline:hover { background: var(--blue-light); }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; table-layout: fixed; width: 100%; min-width: 1000px; }
+th { font-weight: 600; text-align: left; padding: 7px 10px; }
+td { padding: 7px 10px; height: 52px; border-bottom: 1px solid var(--border-subtle); }
+thead tr:last-child th, thead th[rowspan] { border-bottom: 1px solid var(--border-subtle); }
+thead th[rowspan] { vertical-align: bottom; }
+th.group { text-align: center; border-bottom: 1px solid var(--border-subtle); }
+.shift-row td { background: var(--page); }
+.shift-cell { padding-left: 10px; padding-right: 0; white-space: nowrap; }
+.shift-inner { display: flex; align-items: center; gap: 10px; }
+.toggle { width: 22px; height: 22px; border: 0; border-radius: var(--radius); background: transparent; color: var(--blue); display: grid; place-items: center; flex: none; padding: 0; }
+.toggle:hover { background: var(--blue-light); }
+.toggle .icon { width: 15px; height: 15px; transition: transform .15s ease; }
+.toggle[aria-expanded="false"] .icon { transform: rotate(-90deg); }
+.two-line { display: block; line-height: 1.45; }
+.two-line small { display: block; font-size: 12px; color: var(--dimmed); }
+.unsaved { font-size: 12px; color: var(--blue); font-weight: 500; }
+.badge { display: inline-flex; align-items: center; height: 20px; padding: 0 10px; border-radius: 1000px; font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.badge.low { background: var(--orange-bg); color: var(--orange-text); }
+.badge.full { background: var(--red-bg); color: var(--red-text); }
+.badge.over { background: var(--red); color: #fff; }
+.was { display: block; font-size: 12px; font-weight: 400; color: var(--dimmed); }
+td.recalc::before { color: var(--text); font-weight: 400; }
+td.recalc { color: var(--blue); font-weight: 600; }
+tr.off td.recalc { color: inherit; font-weight: 400; }
+.badge.ok { background: var(--green-bg); color: var(--green); }
+
+/* Used by channel: hover for a quick look, chevron keeps the breakdown open */
+.used-wrap { display: flex; align-items: center; gap: 8px; }
+tr.ch-open td { border-bottom-color: transparent; }
+tr.ch-row td { height: auto; padding-top: 0; padding-bottom: 12px; }
+tr.ch-row td.ch-cell { padding-left: 0; padding-right: 0; }
+.ch-box { display: inline-flex; flex-direction: column; gap: 4px; background: var(--blue-light); border-radius: var(--radius); padding: 8px 10px; font-size: 12px; line-height: 17px; color: var(--dimmed); }
+.ch-line { display: flex; gap: 8px; }
+.ch-line > span:last-child { min-width: 0; }
+.ch-grp { flex: 0 0 64px; font-weight: 500; }
+.ch-line b { font-weight: 500; color: var(--text); }
+.ch-sep { margin: 0 6px; }
+tr.ch-row.off td { background: var(--line); }
+tr.ch-row.off .ch-box { background: transparent; }
+.c-split { display: none; }
+.chan-note { margin: 0; font-size: 12px; color: var(--dimmed); }
+/* Option B: external capacity is part of Total, shown under it */
+.ext-line { display: block; font-size: 12px; font-weight: 400; color: var(--dimmed); white-space: nowrap; }
+#store-view.collect-mode .ext-line { display: none; }
+/* Collect orders are all internal, so there is no channel breakdown */
+#store-view.collect-mode .ch-toggle, #store-view.collect-mode tr.ch-row, #store-view.collect-mode .c-split { display: none !important; }
+.ch-tip { position: fixed; z-index: 40; pointer-events: none; background: #212529; color: #fff; border-radius: var(--radius); padding: 8px 12px; font-size: 14px; line-height: 21px; box-shadow: 0 1px 3px rgba(0,0,0,.1); min-width: 228px; }
+.ch-tip div { display: flex; justify-content: space-between; gap: 16px; }
+.ch-tip .tip-total { font-weight: 600; }
+.ch-tip .tip-h { color: #adb5bd; }
+.ch-tip b { font-weight: 500; }
+.two-line small.extra-ok { color: var(--green); } .two-line small.extra-mid { color: var(--amber); } .two-line small.extra-high { color: var(--red); }
+
+/* Greyed out: Delivery 0 greys a time slot, Pickers 0 greys a whole shift */
+tr.off td { background: var(--line); color: var(--dimmed); }
+tr.off .two-line small { color: var(--dimmed); }
+tr.off .badge { background: transparent; color: var(--dimmed); box-shadow: inset 0 0 0 1px var(--border); }
+
+/* NumberInput xs */
+.number { position: relative; width: 72px; height: 30px; }
+.number input { width: 100%; height: 100%; padding: 0 24px 0 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--body); font-size: 12px; outline: 0; }
+.number input { color: var(--text); }
+.number input:focus { border-color: var(--blue); }
+.number input:disabled { background: var(--line); border-color: var(--border); color: var(--dimmed); cursor: not-allowed; }
+.steps button:disabled { color: var(--placeholder); background: transparent; cursor: not-allowed; }
+.number.changed input { border-color: var(--blue); background: var(--blue-tile); font-weight: 600; }
+.steps { position: absolute; top: 1px; right: 1px; bottom: 1px; width: 22px; display: flex; flex-direction: column; }
+.steps button { flex: 1; min-height: 0; border: 0; background: transparent; padding: 0; display: grid; place-items: center; color: var(--dimmed); border-radius: 4px; }
+.steps button:hover { background: var(--chip); color: var(--text); }
+.steps .icon { width: 10px; height: 10px; stroke-width: 2.5; }
+
+.alert { display: flex; gap: var(--md); padding: var(--md); border-radius: var(--radius); background: #fff3bf; }
+.alert > .icon { color: var(--amber); width: 20px; height: 20px; margin-top: 1px; }
+.alert b { display: block; color: var(--amber); font-weight: 700; }
+.stores-table td { height: 52px; }
+.store-link { padding: 0; border: 0; background: none; color: var(--blue); text-align: left; }
+.store-link:hover { text-decoration: underline; }
+tr.off .store-link { color: var(--dimmed); }
+.booked { display: flex; flex-direction: column; gap: 4px; }
+.bar { height: 5px; border-radius: 1000px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--blue); border-radius: 1000px; }
+tr.off .bar { background: var(--border-subtle); }
+.badge.none { background: transparent; color: var(--dimmed); box-shadow: inset 0 0 0 1px var(--border); }
+
+/* Confirm dialog */
+.confirm { position: fixed; inset: 0; z-index: 25; display: flex; align-items: center; justify-content: center; padding: var(--md); background: var(--overlay); }
+.confirm-box { width: min(380px, 100%); background: var(--body); border-radius: var(--radius); box-shadow: var(--shadow-xl); padding: var(--md); display: flex; flex-direction: column; gap: var(--md); }
+.confirm-box p { margin: 0; }
+
+/* Drawer */
+.overlay { position: fixed; inset: 0; background: var(--overlay); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 20; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(380px, 100%); background: var(--body); box-shadow: var(--shadow-xl); display: flex; flex-direction: column; transform: translateX(100%); visibility: hidden; transition: transform .2s ease, visibility .2s; z-index: 21; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.open .overlay { opacity: 1; pointer-events: auto; }
+.open .drawer { transform: none; visibility: visible; }
+.drawer-head { min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: var(--xs); padding: var(--md) 11px var(--md) var(--md); }
+.drawer-head h2 { outline: 0; }
+.close { width: 28px; height: 28px; border: 0; border-radius: var(--radius); background: transparent; color: var(--dimmed); display: grid; place-items: center; flex: none; }
+.close:hover { background: var(--page); }
+.close .icon { width: 20px; height: 20px; }
+.drawer-form { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--md) var(--md); display: flex; flex-direction: column; gap: var(--md); }
+.drawer h3 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.5; }
+.drawer hr { width: 100%; border: 0; border-top: 1px solid var(--border-subtle); margin: 0; }
+.req { color: var(--red); }
+.field { display: flex; flex-direction: column; gap: var(--xs); }
+.field-text { gap: 5px; }
+.field-text label { font-weight: 600; }
+.reasons { gap: 8px 10px; }
+textarea { width: 100%; min-height: 76px; resize: vertical; padding: 5.5px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--body); outline: 0; }
+textarea::placeholder { color: var(--placeholder); }
+textarea:focus { border-color: var(--blue); }
+textarea.invalid { border-color: var(--red); }
+.error { font-size: 12px; color: var(--red); }
+.actions { display: flex; justify-content: flex-end; gap: var(--sm); padding: 0 var(--md) var(--md); }
+
+/* Notification */
+.toast { position: fixed; right: max(20px, env(safe-area-inset-right, 0px)); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); max-width: min(380px, calc(100% - 32px)); background: var(--body); border-radius: var(--radius); box-shadow: var(--shadow-xl); border: 1px solid var(--line); padding: var(--sm) var(--md); z-index: 30; display: flex; gap: var(--xs); align-items: flex-start; }
+.toast .icon { color: var(--blue); margin-top: 3px; }
+.toast.success .icon { color: var(--teal); }
+
+@media (max-width: 1240px) {
+  main { padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  /* Capacity — Mobile from Figma: list rows, sideways chips and cards, sticky save */
+  .app { display: block; }
+  .menu { display: none; }
+  .menu-open .menu { display: block; position: fixed; inset: 0; z-index: 15; width: 100%; height: 100%; align-self: auto; border: 0; padding-top: env(safe-area-inset-top, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .menu .logo { height: 66px; }
+  #menu-toggle { display: none; }
+  #menu-close { display: grid; }
+  #burger { display: grid; }
+  main { gap: 20px; padding-block: 16px 94px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1 { font-size: 22px; }
+  .store { flex: 1 1 100%; flex-direction: column; align-items: stretch; gap: 5px; }
+  .store .select { flex: 1; }
+  .header-fields { flex: 1 1 100%; flex-direction: column; gap: var(--sm); }
+  .store, .store.period { flex: none; flex-direction: row; align-items: center; gap: var(--xs); }
+  .store > span { flex: 0 0 52px; font-weight: 400; }
+  .toolbar-main { flex: 1 1 100%; flex-direction: column; align-items: stretch; gap: var(--md); }
+  .store-filters { flex-direction: column; gap: var(--xs); }
+  .store-filters .segmented { display: grid; grid-template-columns: 1fr 1fr; }
+  .fulfil-line { display: block; margin-top: -8px; }
+  .stores-wrap { max-height: none; overflow: visible; }
+  .stores-wrap thead th { position: static; }
+
+  .kpis, .chips.scroll { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .kpis::-webkit-scrollbar, .chips.scroll::-webkit-scrollbar { display: none; }
+  .kpi { flex: 0 0 248px; }
+  .chip { flex: none; }
+  .controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sm); }
+  .filters { flex-wrap: nowrap; }
+  .segmented button { padding-inline: 8px; }
+
+  .paper { padding: var(--md); }
+  .save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--body); border-top: 1px solid var(--border-subtle); padding: var(--md) max(16px, env(safe-area-inset-right, 0px)) calc(var(--md) + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .save-bar .btn { width: 100%; height: 42px; font-size: 16px; }
+  .toast { left: 16px; right: 16px; max-width: none; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
+
+  .table-wrap { overflow: visible; }
+  table, tbody { display: block; min-width: 0; width: 100%; }
+  colgroup, thead { display: none; }
+  td { height: auto; padding: 0; border: 0; }
+  tr.off td, .shift-row td { background: transparent; }
+
+  .shift-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; padding: 0 10px; background: var(--page); border-radius: var(--radius); margin-top: var(--md); }
+  .shift-row:first-child { margin-top: 0; }
+  .shift-row > td:first-child { flex: 1; min-width: 0; padding: 7px 0; }
+  .shift-row > td:nth-child(2) { display: flex; align-items: center; gap: var(--xs); }
+  .shift-row > td:nth-child(2)::before { content: "Pickers"; }
+  .shift-row > td:nth-child(3) { flex: 1 1 100%; }
+  .shift-row .unsaved { display: block; padding-bottom: 8px; }
+  .shift-row.off, tr.off.shift-row { background: var(--line); }
+
+  tr[data-slot-of] { display: grid; grid-template-columns: 136px minmax(0, 1fr); row-gap: 4px; align-items: center; padding: var(--sm) 10px; }
+  tr[data-slot-of] + tr[data-slot-of], tr.ch-row + tr[data-slot-of] { border-top: 1px solid var(--border-subtle); }
+  tr.ch-row { display: none !important; }
+  .c-used .used-wrap { justify-content: flex-start; gap: var(--xs); }
+  .c-split { display: block; grid-column: 1 / -1; padding-left: 12px; font-size: 12px; line-height: 15px; }
+  .c-split .sp-h { color: var(--dimmed); font-weight: 500; }
+  .c-split .sp-r { display: flex; gap: 8px; padding-left: 8px; }
+  .c-split .sp-r span { flex: 0 0 108px; text-align: right; color: var(--dimmed); }
+  .c-split .sp-r b { font-weight: 500; }
+  tr[data-slot-of].off { background: var(--line); }
+  tr[data-slot-of] .blank { display: none; }
+  .c-time { font-weight: 600; grid-column: 1; grid-row: 1; margin-bottom: 6px; }
+  .c-avail { grid-column: 2; grid-row: 1; margin-bottom: 6px; }
+  .c-row { grid-column: 1 / -1; display: flex; align-items: center; }
+  .c-row::before { content: attr(data-label); flex: 0 0 116px; margin-right: var(--lg); }
+  .c-del { margin-bottom: 6px; }
+  .c-group { display: block; grid-column: 1 / -1; font-weight: 600; }
+  .c-fc { margin-top: 6px; }
+  .c-row .two-line { display: flex; align-items: center; gap: var(--xs); }
+  .c-row .two-line small { display: inline; }
+  .c-row .was { display: inline; margin-left: var(--xs); }
+  .c-full .ext-line { display: inline; margin-left: var(--xs); }
+
+  /* All stores list */
+  .app.overview main { padding-bottom: 20px; }
+  .store-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; align-items: center; padding: var(--sm) 0; }
+  .store-row + .store-row { border-top: 1px solid var(--border-subtle); }
+  tr.store-row.off { background: var(--line); border-radius: var(--radius); padding-inline: 10px; }
+  .stores-table td { height: auto; }
+  .s-name { grid-column: 1; grid-row: 1; margin-bottom: 6px; min-width: 0; padding-right: 10px; }
+  .s-status { grid-column: 2; grid-row: 1; margin-bottom: 6px; }
+  .bar, .vs { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"></path></symbol>
-  <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 21h18M4 21V10M20 21V10M3 7l2-4h14l2 4a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0"></path><path d="M9 21v-6h6v6"></path></symbol>
-  <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M4 12h12M4 12l4 4M4 12l4-4M20 5v14"></path></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"></circle><path d="m21 21-6-6"></path></symbol>
-  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M4 11h16M11 15h1v3"></path></symbol>
-  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle><path d="M17 17H6V3H4M6 5l14 1-1 7H6"></path></symbol>
-  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path></symbol>
-  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"></path><path d="M9 12h12l-3-3M18 15l3-3"></path></symbol>
-  <symbol id="i-loader" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></symbol>
-  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path></symbol>
-  <symbol id="i-up" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M14 7h7v7"></path></symbol>
-  <symbol id="i-down" viewBox="0 0 24 24"><path d="m3 7 6 6 4-4 8 8M21 10v7h-7"></path></symbol>
-  <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
-  <symbol id="i-chev-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"></path></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></symbol>
-  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></symbol>
-  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01M11 12h1v4h1"></path></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 21h18M4 21V10M20 21V10M3 7l2-4h14l2 4a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M4 12h12M4 12l4 4M4 12l4-4M20 5v14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16M11 15h1v3"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M17 17H6V3H4M6 5l14 1-1 7H6"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M9 12h12l-3-3M18 15l3-3"/></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M14 7h7v7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m3 7 6 6 4-4 8 8M21 10v7h-7"/></symbol>
+  <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chev-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></symbol>
 </svg>
 
 <div class="app" id="app">
   <aside class="menu">
     <div class="logo">
-      <span class="logo-mark"><svg class="icon"><use href="#i-store"></use></svg></span>
+      <span class="logo-mark"><svg class="icon"><use href="#i-store"/></svg></span>
       <b>AB</b>
-      <button class="icon-btn" id="menu-toggle" type="button" aria-label="Collapse menu"><svg class="icon"><use href="#i-collapse"></use></svg></button>
-      <button class="icon-btn" id="menu-close" type="button" aria-label="Close menu"><svg class="icon"><use href="#i-x"></use></svg></button>
+      <button class="icon-btn" id="menu-toggle" type="button" aria-label="Collapse menu"><svg class="icon"><use href="#i-collapse"/></svg></button>
+      <button class="icon-btn" id="menu-close" type="button" aria-label="Close menu"><svg class="icon"><use href="#i-x"/></svg></button>
     </div>
     <div class="menu-group">
       <div class="menu-label">Main Menu</div>
       <div class="main-nav">
-        <a class="nav" href="#capacity" data-soon="" title="Orders"><svg class="icon"><use href="#i-search"></use></svg><span>Orders</span></a>
-        <a class="nav active" href="#capacity" aria-current="page" title="Capacity"><svg class="icon"><use href="#i-calendar"></use></svg><span>Capacity</span></a>
-        <a class="nav" href="#capacity" data-soon="" title="In-store picking"><svg class="icon"><use href="#i-cart"></use></svg><span>In-store picking</span></a>
+        <a class="nav" href="#capacity" data-soon title="Orders"><svg class="icon"><use href="#i-search"/></svg><span>Orders</span></a>
+        <a class="nav active" href="#capacity" aria-current="page" title="Capacity"><svg class="icon"><use href="#i-calendar"/></svg><span>Capacity</span></a>
+        <a class="nav" href="#capacity" data-soon title="In-store picking"><svg class="icon"><use href="#i-cart"/></svg><span>In-store picking</span></a>
       </div>
       <hr>
       <div id="tools-group">
         <div class="menu-label">Tools</div>
-        <div class="nav" title="Language"><svg class="icon"><use href="#i-globe"></use></svg><span>Language</span>
-          <div class="select select-xs" id="language" data-label="Language" data-options="Eng|Ελ"><button class="select-control" id="language-control" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="language-list" aria-label="Language"><span class="select-value">Eng</span><svg class="icon"><use href="#i-chev-down"></use></svg></button>
-    <ul class="select-list" id="language-list" role="listbox" aria-label="Language" hidden=""><li role="option" aria-selected="true"><svg class="icon"><use href="#i-check"></use></svg><span>Eng</span></li><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>Ελ</span></li></ul></div>
+        <div class="nav" title="Language"><svg class="icon"><use href="#i-globe"/></svg><span>Language</span>
+          <div class="select select-xs" id="language" data-label="Language" data-options="Eng|Ελ"></div>
         </div>
-        <a class="nav" href="#capacity" data-soon="" title="Sign Out"><svg class="icon"><use href="#i-logout"></use></svg><span>Sign Out</span></a>
+        <a class="nav" href="#capacity" data-soon title="Sign Out"><svg class="icon"><use href="#i-logout"/></svg><span>Sign Out</span></a>
       </div>
     </div>
   </aside>
@@ -59,68 +381,53 @@
   <main id="capacity">
     <header class="navbar">
       <h1>Capacity</h1>
-      <button class="icon-btn" id="burger" type="button" aria-label="Open menu"><svg class="icon"><use href="#i-menu"></use></svg></button>
-      <div class="pickers">
-        <div class="store"><span>Store</span><div class="select" id="store" data-label="Store" data-options="All stores"></div></div>
-        <div class="store period"><span>Period</span><div class="select" id="period" data-label="Period" data-options="Today|Fri 16|Sat 17|Mon 19|Tue 20|Wed 21"></div></div>
+      <button class="icon-btn" id="burger" type="button" aria-label="Open menu"><svg class="icon"><use href="#i-menu"/></svg></button>
+      <div class="header-fields">
+        <div class="store"><span>Store</span>
+          <div class="select" id="store" data-label="Store" data-options="All stores|Korinthou 15, Patras|Lampraki 200, Glyfada|Leoforos 25is Avgoustou 30, Heraklion Port|Egnatias 154, Thessaloniki|Vouliagmenis 45, Glyfada|Kifisias 300, Kifisia|Alexandras 50, Athens|Marathonos 20, Pallini|Ethnikis Antistaseos 8, Nea Smyrni|Kifisias 120, Marousi|Irakleiou 400, Nea Ionia|Patission 88, Athens|Thiseos 100, Kallithea|Mesogeion 210, Cholargos|Dimokratias 15, Larissa|Iroon Polytechniou 55, Piraeus|Akti Dymaion 60, Patras|Agiou Dimitriou 81, Kalamata|Tsimiski 32, Thessaloniki|Gounari 4, Ioannina|Vasilissis Sofias 12, Athens"></div>
+        </div>
+        <div class="store period"><span>Period</span>
+          <div class="select" id="period" data-label="Period" data-options="Today|Tomorrow|Mon, 12|Tue, 13|Wed, 14|Thu, 15|Fri, 16"></div>
+        </div>
       </div>
     </header>
 
-
     <section class="kpis" aria-label="Summary">
-      <div class="kpi"><div class="kpi-top">Total capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-cap">760</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+3%</b>vs last week</div></div></div>
-      <div class="kpi"><div class="kpi-top">Used capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-booked">745</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+5.1%</b>vs last week</div></div></div>
-      <div class="kpi"><div class="kpi-top">Available capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-avail">15</div><div class="delta"><svg class="icon down"><use href="#i-down"></use></svg><b class="down">−180</b>vs last week</div></div></div>
-      <div class="kpi"><div class="kpi-top">Orders forecast<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-fc">980</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+9%</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Total capacity<span class="tile"><svg class="icon"><use href="#i-calendar"/></svg></span></div><div class="kpi-main"><div class="kpi-value" id="kpi-cap">12,800</div><div class="delta"><svg class="icon up"><use href="#i-up"/></svg><b class="up">+3%</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Used capacity<span class="tile"><svg class="icon"><use href="#i-calendar"/></svg></span></div><div class="kpi-main"><div class="kpi-value" id="kpi-booked">10,565</div><div class="delta"><svg class="icon up"><use href="#i-up"/></svg><b class="up">+5.1%</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Available capacity<span class="tile"><svg class="icon"><use href="#i-calendar"/></svg></span></div><div class="kpi-main"><div class="kpi-value" id="kpi-avail">2,235</div><div class="delta"><svg class="icon down"><use href="#i-down"/></svg><b class="down">−180</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Orders forecast<span class="tile"><svg class="icon"><use href="#i-calendar"/></svg></span></div><div class="kpi-main"><div class="kpi-value" id="kpi-fc">13,424</div><div class="delta"><svg class="icon up"><use href="#i-up"/></svg><b class="up">+9%</b>vs last week</div></div></div>
     </section>
 
+    <section class="paper" id="stores-view">
+      <div class="toolbar"><h2>Stores (21)</h2></div>
+      <div class="table-wrap stores-wrap" tabindex="0" role="region" aria-label="All stores">
+        <table class="stores-table">
+          <colgroup><col style="width:250px"><col style="width:130px"><col style="width:140px"><col style="width:140px"><col style="width:90px"><col style="width:90px"><col style="width:140px"></colgroup>
+          <thead>
+            <tr><th rowspan="2" scope="col">Store</th><th rowspan="2" scope="col">Fulfilment</th><th rowspan="2" scope="col">Orders forecast</th><th colspan="2" class="group" scope="colgroup">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Full slots</th><th rowspan="2" scope="col">Status</th></tr>
+            <tr><th scope="col">Used</th><th scope="col">Available</th></tr>
+          </thead>
+          <tbody id="store-rows"></tbody>
+        </table>
+      </div>
+    </section>
 
-    <section class="paper" id="stores-view" hidden="">
-      <div class="toolbar"><h2 id="stores-title">Stores</h2></div>
-      <div class="stores-x">
-        <div class="stores-head" aria-hidden="true">
-          <table class="stores-table">
-            <colgroup><col style="width:25.7%"><col style="width:13.3%"><col style="width:14.8%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:13.4%"></colgroup>
-            <thead>
-              <tr><th rowspan="2">Store</th><th rowspan="2">Fulfilment</th><th colspan="2" class="group">Fulfillment capacity (Orders)</th><th rowspan="2">Full slots</th><th rowspan="2">Orders forecast</th><th rowspan="2">Status</th></tr>
-              <tr><th>Used</th><th>Available</th></tr>
-            </thead>
-          </table>
-        </div>
-        <div class="scroll-frame" id="stores-frame">
-          <div class="stores-scroll" tabindex="0" role="region" aria-label="All stores">
-            <table class="stores-table">
-              <colgroup><col style="width:25.7%"><col style="width:13.3%"><col style="width:14.8%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:13.4%"></colgroup>
-              <thead class="sr-only">
-                <tr><th scope="col">Store</th><th scope="col">Fulfilment</th><th scope="col">Used</th><th scope="col">Available</th><th scope="col">Full slots</th><th scope="col">Orders forecast</th><th scope="col">Status</th></tr>
-              </thead>
-              <tbody id="store-rows"></tbody>
-            </table>
+    <section class="paper" id="store-view" hidden>
+      <div class="toolbar">
+        <div class="toolbar-main">
+          <h2 id="store-title">Store</h2>
+          <div class="filters store-filters">
+            <div class="segmented" data-single role="group" aria-label="Fulfilment" id="fulfil-seg"><button type="button" aria-pressed="true">Delivery</button><button type="button" aria-pressed="false">Collect</button></div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <div class="compare" id="compare" role="group" aria-label="Prototype: compare options" hidden>
-      <span>Prototype · compare</span>
-      <div class="segmented"><button type="button" data-opt="1" aria-pressed="true">Option 1 · Switches</button><button type="button" data-opt="4" aria-pressed="false">Option 4 · Sections</button></div>
-    </div>
-    <section class="paper" id="store-view">
-      <div class="toolbar">
-        <div class="toolbar-main"><h2 id="store-title">Store</h2></div>
         <div class="save-bar"><button class="btn btn-filled" id="save" type="button">Save changes</button></div>
-      </div>
-      <p class="ful-row" id="store-ful"><span>Fulfilment:</span><b></b></p>
-      <div class="store-controls" id="store-controls" role="group" aria-label="Shift filters">
-        <div class="segmented" id="seg-ful" role="group" aria-label="Fulfilment"></div>
-        <div class="segmented" id="seg-src" role="group" aria-label="Order source"></div>
-        <div class="segmented" id="seg-type" role="group" aria-label="Delivery type"></div>
       </div>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Capacity by shift and time slot">
         <table>
-          <colgroup><col style="width:13.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:10.8%"><col style="width:9.6%"><col style="width:10.8%"><col style="width:13.6%"></colgroup>
+          <colgroup><col style="width:132px"><col style="width:92px"><col style="width:116px"><col style="width:92px"><col style="width:128px"><col style="width:100px"><col style="width:96px"><col style="width:108px"><col style="width:136px"></colgroup>
           <thead>
-            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
+            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup" id="cap-group">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
             <tr><th scope="col">Total</th><th scope="col">Used</th><th scope="col">Reserved</th><th scope="col">Available</th></tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -131,24 +438,24 @@
 </div>
 
 <div class="overlay" id="overlay"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" inert="">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" inert>
   <div class="drawer-head">
     <h2 id="drawer-title" tabindex="-1">Why did delivery change?</h2>
-    <button class="close" id="drawer-close" type="button" aria-label="Close and keep editing"><svg class="icon"><use href="#i-x"></use></svg></button>
+    <button class="close" id="drawer-close" type="button" aria-label="Close and keep editing"><svg class="icon"><use href="#i-x"/></svg></button>
   </div>
-  <form class="drawer-form" id="reason-form" novalidate="">
+  <form class="drawer-form" id="reason-form" novalidate>
     <div class="drawer-body">
       <h3 id="changed-count">0 slots changed</h3>
       <hr>
       <div class="field">
         <h3 id="reason-label">Reason <span class="req" aria-hidden="true">*</span></h3>
-        <div class="chips reasons" id="reasons" role="group" aria-labelledby="reason-label"><button class="chip" type="button" data-reason="Staff shortage" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Staff shortage</button><button class="chip" type="button" data-reason="Vehicle issue" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Vehicle issue</button><button class="chip" type="button" data-reason="High demand" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>High demand</button><button class="chip" type="button" data-reason="Store event" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Store event</button><button class="chip" type="button" data-reason="Other" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Other</button></div>
-        <div class="error" id="reason-error" role="alert" hidden="">Select at least one reason.</div>
+        <div class="chips reasons" id="reasons" role="group" aria-labelledby="reason-label"></div>
+        <div class="error" id="reason-error" role="alert" hidden>Select at least one reason.</div>
       </div>
       <div class="field field-text">
-        <label for="details">Details <span class="req" id="details-req" aria-hidden="true" hidden="">*</span></label>
+        <label for="details">Details <span class="req" id="details-req" aria-hidden="true" hidden>*</span></label>
         <textarea id="details" rows="3" placeholder="Add details if needed. Required for Other." aria-describedby="details-error"></textarea>
-        <div class="error" id="details-error" role="alert" hidden="">Add details to explain Other.</div>
+        <div class="error" id="details-error" role="alert" hidden>Add details to explain Other.</div>
       </div>
     </div>
     <div class="actions">
@@ -157,7 +464,7 @@
     </div>
   </form>
 </aside>
-<div class="confirm" id="confirm" hidden="">
+<div class="confirm" id="confirm" hidden>
   <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
     <h2 id="confirm-title">Discard unsaved changes?</h2>
     <p id="confirm-text">Your edits for this store will be lost if you switch now.</p>
@@ -167,7 +474,550 @@
     </div>
   </div>
 </div>
-<div class="toast" id="toast" role="status" hidden=""><svg class="icon" id="toast-icon"><use href="#i-info"></use></svg><span id="toast-text"></span></div>
-<script src="assets/app.js?v=9"></script>
-</body>
-</html>
+<div class="toast" id="toast" role="status" hidden><svg class="icon" id="toast-icon"><use href="#i-info"/></svg><span id="toast-text"></span></div>
+
+<script>
+const BASE_SHIFTS = [
+  { id: 'a', name: 'Shift A', hours: '08:00 – 12:00', pickers: 3, slots: [
+    ['08:00 – 09:00', 3, 90, 80, 5, 92, 3], ['09:00 – 10:00', 3, 80, 70, 5, 104, 12],
+    ['10:00 – 11:00', 3, 50, 50, 0, 61, 2], ['11:00 – 12:00', 3, 90, 80, 5, 118, 22] ] },
+  { id: 'b', name: 'Shift B', hours: '12:00 – 16:00', pickers: 4, slots: [
+    ['12:00 – 13:00', 3, 100, 50, 20, 143, 25], ['13:00 – 14:00', 3, 110, 100, 5, 97, 9],
+    ['14:00 – 15:00', 3, 40, 40, 0, 46, 1], ['15:00 – 16:00', 3, 80, 70, 5, 85, 6] ] },
+  { id: 'c', name: 'Shift C', hours: '16:00 – 19:00', pickers: 2, slots: [
+    ['16:00 – 17:00', 3, 50, 50, 0, 58, 4], ['17:00 – 18:00', 3, 90, 80, 5, 112, 15],
+    ['18:00 – 19:00', 3, 100, 50, 20, 131, 20] ] }
+];
+/* Example data. Every store's slots add up to its row in the All stores table. */
+const STORES = [
+  { name: 'Korinthou 15, Patras', fulfil: 'Collect', cap: 0, booked: 0, avail: 0, fullSlots: 0, fc: 420, ex: 'No capacity', exClass: '', status: 'No pickers', tone: 'none', off: true },
+  { name: 'Lampraki 200, Glyfada', fulfil: 'Delivery, Collect', cap: 700, booked: 690, avail: 10, fullSlots: 8, fc: 830, ex: '+19%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Leoforos 25is Avgoustou 30, Heraklion Port', fulfil: 'Delivery', cap: 660, booked: 650, avail: 10, fullSlots: 9, fc: 780, ex: '+18%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Egnatias 154, Thessaloniki', fulfil: 'Delivery, Collect', cap: 600, booked: 590, avail: 10, fullSlots: 8, fc: 720, ex: '+20%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Vouliagmenis 45, Glyfada', fulfil: 'Delivery, Collect', cap: 760, booked: 745, avail: 15, fullSlots: 6, fc: 980, ex: '+29%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Kifisias 300, Kifisia', fulfil: 'Delivery, Collect', cap: 720, booked: 700, avail: 20, fullSlots: 7, fc: 860, ex: '+19%', exClass: 'extra-high', status: 'Almost full', tone: 'full' },
+  { name: 'Alexandras 50, Athens', fulfil: 'Delivery', cap: 640, booked: 610, avail: 30, fullSlots: 4, fc: 702, ex: '+10%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Marathonos 20, Pallini', fulfil: 'Collect', cap: 520, booked: 470, avail: 50, fullSlots: 3, fc: 575, ex: '+11%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Ethnikis Antistaseos 8, Nea Smyrni', fulfil: 'Delivery, Collect', cap: 600, booked: 540, avail: 60, fullSlots: 2, fc: 650, ex: '+8%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Kifisias 120, Marousi', fulfil: 'Delivery, Collect', cap: 880, booked: 790, avail: 90, fullSlots: 3, fc: 1047, ex: '+19%', exClass: 'extra-high', status: 'High demand', tone: 'low' },
+  { name: 'Irakleiou 400, Nea Ionia', fulfil: 'Delivery', cap: 580, booked: 520, avail: 60, fullSlots: 3, fc: 640, ex: '+10%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Patission 88, Athens', fulfil: 'Delivery, Collect', cap: 640, booked: 560, avail: 80, fullSlots: 2, fc: 690, ex: '+8%', exClass: 'extra-mid', status: 'High demand', tone: 'low' },
+  { name: 'Thiseos 100, Kallithea', fulfil: 'Delivery, Collect', cap: 620, booked: 500, avail: 120, fullSlots: 1, fc: 600, ex: '−3%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Mesogeion 210, Cholargos', fulfil: 'Delivery, Collect', cap: 700, booked: 490, avail: 210, fullSlots: 0, fc: 610, ex: '−13%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Dimokratias 15, Larissa', fulfil: 'Delivery', cap: 600, booked: 420, avail: 180, fullSlots: 0, fc: 500, ex: '−17%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Iroon Polytechniou 55, Piraeus', fulfil: 'Collect', cap: 560, booked: 380, avail: 180, fullSlots: 0, fc: 470, ex: '−16%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Akti Dymaion 60, Patras', fulfil: 'Delivery, Collect', cap: 540, booked: 360, avail: 180, fullSlots: 0, fc: 430, ex: '−20%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Agiou Dimitriou 81, Kalamata', fulfil: 'Delivery', cap: 500, booked: 330, avail: 170, fullSlots: 0, fc: 410, ex: '−18%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Tsimiski 32, Thessaloniki', fulfil: 'Delivery, Collect', cap: 820, booked: 520, avail: 300, fullSlots: 0, fc: 640, ex: '−22%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Gounari 4, Ioannina', fulfil: 'Collect', cap: 480, booked: 300, avail: 180, fullSlots: 0, fc: 350, ex: '−27%', exClass: 'extra-ok', status: 'On track', tone: 'ok' },
+  { name: 'Vasilissis Sofias 12, Athens', fulfil: 'Delivery, Collect', cap: 680, booked: 400, avail: 280, fullSlots: 0, fc: 520, ex: '−24%', exClass: 'extra-ok', status: 'On track', tone: 'ok' }
+];
+const ALL_TOTALS = { cap: 12800, booked: 10565, avail: 2235, fc: 13424 };
+
+function spread(total, weights) {
+  const sum = weights.reduce((a, b) => a + b, 0);
+  const out = weights.map(w => sum ? Math.floor(total * w / sum) : 0);
+  let rest = total - out.reduce((a, b) => a + b, 0);
+  for (let i = 0; rest > 0; i = (i + 1) % out.length) { if (weights[i]) { out[i]++; rest--; } }
+  return out;
+}
+function shiftsFor(store) {
+  const copy = BASE_SHIFTS.map(s => ({ ...s, slots: s.slots.map(r => [...r]) }));
+  if (store.name === 'Kifisias 120, Marousi') return copy;
+  const rows = copy.flatMap(s => s.slots);
+  const weights = rows.map(r => r[2]);
+  const caps = spread(store.cap, weights), fcs = spread(store.fc, weights);
+  const fullSet = new Set([2, 6, 8, 0, 4, 9, 1, 5, 10, 3, 7].slice(0, store.fullSlots));
+  const openWeights = caps.map((c, i) => fullSet.has(i) ? 0 : c);
+  const left = spread(store.avail, openWeights);
+  rows.forEach((r, i) => {
+    const booked = caps[i] - left[i], reserved = Math.round(booked * .08);
+    r[2] = caps[i]; r[3] = booked - reserved; r[4] = reserved; r[5] = fcs[i];
+    if (store.off) r[6] = null;
+  });
+  if (store.off) copy.forEach(s => { s.pickers = 0; });
+  return copy;
+}
+/* Fulfilment capacity per slot = orders one picker handles in that slot × pickers on the shift.
+   The per-picker rate comes from each store's current numbers; stores with no pickers use a default. */
+const DEFAULT_RATE = 25;
+function withRates(shifts) {
+  shifts.forEach(s => s.slots.forEach(r => { if (r[7] == null) r[7] = s.pickers ? r[2] / s.pickers : DEFAULT_RATE; }));
+  return shifts;
+}
+const fullFor = (r, pickers) => Math.round(r[7] * pickers);
+/* Used by channel (example data). Which channels exist depends on the Period:
+   Today: Internal = Fast delivery OR Same day (one per slot), External = Wolt, Foodora, Skroutz, Box, Bolt, Glovo.
+   Other days: Internal = Next day, External = Skroutz (Greece only). The numbers always add up to Used. */
+let period = 'today';
+const EXT_TODAY = ['Wolt', 'Foodora', 'Skroutz', 'Box', 'Bolt', 'Glovo'];
+const SLOT_TYPES = ['Fast delivery','Fast delivery','Fast delivery','Fast delivery','Same day','Same day','Fast delivery','Same day','Fast delivery','Same day','Same day'];
+const TODAY_W = [95, 35, 20, 15, 10, 15, 10], OTHER_W = [82, 18];
+const KIF_TODAY = { 80:[38,14,8,6,4,6,4], 70:[33,12,7,5,4,5,4], 50:[24,8,5,4,3,3,3], 100:[48,18,10,8,5,7,4], 40:[19,7,4,3,3,2,2] };
+const KIF_OTHER = { 80:[66,14], 70:[58,12], 50:[42,8], 100:[82,18], 40:[34,6] };
+function channelsFor(r, gi) {
+  const used = r[3], kif = currentStore && currentStore.name === 'Kifisias 120, Marousi';
+  if (period === 'today') {
+    const v = (kif && KIF_TODAY[used]) || spread(used, TODAY_W);
+    return { internal: [[SLOT_TYPES[gi], v[0]]], external: EXT_TODAY.map((n, i) => [n, v[i + 1]]) };
+  }
+  const v = (kif && KIF_OTHER[used]) || spread(used, OTHER_W);
+  return { internal: [['Next day', v[0]]], external: [['Skroutz', v[1]]] };
+}
+const openCh = new Set();
+/* External capacity is part of Total. Share of Total per slot (Kifisias 120 from Figma v2), never below external orders already used */
+const EXT_SHARE = [45/90, 40/80, 28/50, 45/90, 35/100, 55/110, 22/40, 40/80, 28/50, 45/90, 40/100];
+const fullNow = {};
+let fulfil = 'Delivery';
+const chNow = {};
+let SHIFTS = [];
+let currentStore = null;
+const REASONS = ['Staff shortage', 'Vehicle issue', 'High demand', 'Store event', 'Other'];
+const DATES = [['Today', true], ['Fri 16'], ['Sat 17'], ['Sun 18', false, true], ['Mon 19'], ['Tue 20'], ['Wed 21']];
+const $ = id => document.getElementById(id);
+const icon = n => `<svg class="icon"><use href="#i-${n}"/></svg>`;
+
+function numberInput(id, value, label, kind) {
+  return `<div class="number" data-kind="${kind}"><input id="${id}" type="text" inputmode="numeric" value="${value}" data-saved="${value}" aria-label="${label}">
+    <div class="steps"><button type="button" data-step="1" tabindex="-1" aria-label="Increase ${label}">${icon('chev-up')}</button><button type="button" data-step="-1" tabindex="-1" aria-label="Decrease ${label}">${icon('chev-down')}</button></div></div>`;
+}
+function badge(left, cap) {
+  if (!cap) return '<span class="badge none">No capacity</span>';
+  if (left < 0) return `<span class="badge over">Over by ${-left}</span>`;
+  if (left <= 0) return '<span class="badge full">Full</span>';
+  return `<span class="badge ${left >= 20 ? 'ok' : 'low'}">${left} left</span>`;
+}
+function extraClass(p) { return p >= 20 ? 'extra-high' : p >= 9 ? 'extra-mid' : 'extra-ok'; }
+
+function renderRows() {
+  let flat = 0;
+  $('rows').innerHTML = SHIFTS.map(s => `
+  <tr class="shift-row" data-shift="${s.id}">
+    <td class="shift-cell"><div class="shift-inner">
+      <button class="toggle" type="button" data-toggle="${s.id}" aria-expanded="${!!s.open}" aria-label="${s.name} time slots">${icon('chev-down')}</button>
+      <span class="two-line">${s.name}<small>${s.hours}</small></span>
+    </div></td>
+    <td>${numberInput('pickers-' + s.id, s.pickers, s.name + ' pickers', 'pickers')}</td>
+    <td colspan="7"><span class="unsaved" id="unsaved-${s.id}" hidden></span></td>
+  </tr>` + s.slots.map((r, i) => {
+    const left = r[2] - r[3] - r[4];
+    return `<tr data-slot-of="${s.id}"${s.open ? '' : ' hidden'}>
+      <td class="blank"></td><td class="blank"></td><td class="c-time">${r[0]}</td>
+      <td class="c-row c-del" data-label="Delivery:">${numberInput(`delivery-${s.id}-${i}`, r[1], `Delivery ${r[0]}`, 'delivery')}</td>
+      <td class="c-group">Capacity (orders)</td><td class="c-row c-full" data-label="Total:">${r[2]}</td><td class="c-row c-used" data-label="Used:" data-ch-cell="${s.id}-${i}"><div class="used-wrap"><span class="used-num">${r[3]}</span><button class="toggle ch-toggle" type="button" data-ch="${s.id}-${i}" aria-expanded="false" aria-label="Used by channel, ${r[0]}">${icon('chev-down')}</button></div></td><td class="c-split" data-split-of="${s.id}-${i}" hidden></td><td class="c-row" data-label="Reserved:">${r[4]}</td><td class="c-avail">${badge(left, r[2])}</td>
+      <td class="c-row c-fc" data-label="Orders forecast:"><span class="two-line">${r[5]}${r[6] == null ? '' : `<small class="${extraClass(r[6])}">+${r[6]}% extra</small>`}</span></td>
+    </tr>
+    <tr class="ch-row" data-ch-of="${s.id}-${i}" data-ch-shift="${s.id}" hidden>
+      <td></td><td></td><td></td><td></td><td></td><td colspan="4" class="ch-cell"><div class="ch-box" id="ch-box-${s.id}-${i}"></div></td>
+    </tr>`; }).join('')).join('');
+}
+
+$('reasons').innerHTML = REASONS.map(r => `<button class="chip" type="button" data-reason="${r}" aria-pressed="false">${icon('check')}${r}</button>`).join('');
+
+/* Single-select groups: shows selection only, the example data stays the same. */
+document.querySelectorAll('[data-single]').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+}));
+
+$('menu-toggle').addEventListener('click', () => {
+  const c = $('app').classList.toggle('collapsed');
+  $('menu-toggle').setAttribute('aria-label', c ? 'Expand menu' : 'Collapse menu');
+});
+document.querySelectorAll('[data-soon]').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault(); toast('This prototype covers the Capacity screen only.');
+}));
+
+/* Select: Mantine Select anatomy with a custom dropdown */
+document.querySelectorAll('.select').forEach(root => {
+  const options = root.dataset.options.split('|');
+  root.innerHTML = `<button class="select-control" id="${root.id}-control" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="${root.id}-list" aria-label="${root.dataset.label}"><span class="select-value">${options[0]}</span>${icon('chev-down')}</button>
+    <ul class="select-list" id="${root.id}-list" role="listbox" aria-label="${root.dataset.label}" hidden>${options.map((o, i) => `<li role="option" aria-selected="${i === 0}">${icon('check')}<span>${o}</span></li>`).join('')}</ul>`;
+  const control = root.querySelector('button'), list = root.querySelector('ul'), items = [...list.children];
+  let active = 0;
+  const mark = i => { active = (i + items.length) % items.length; items.forEach((x, n) => x.classList.toggle('active', n === active)); };
+  const setOpen = open => {
+    list.hidden = !open; control.setAttribute('aria-expanded', open);
+    if (open) mark(items.findIndex(x => x.getAttribute('aria-selected') === 'true'));
+  };
+  const choose = i => {
+    items.forEach((x, n) => x.setAttribute('aria-selected', n === i));
+    control.querySelector('.select-value').textContent = options[i];
+    setOpen(false); control.focus();
+    root.dispatchEvent(new CustomEvent('choose', { detail: options[i] }));
+  };
+  root.setValue = v => {
+    const i = options.indexOf(v);
+    items.forEach((x, n) => x.setAttribute('aria-selected', n === i));
+    control.querySelector('.select-value').textContent = v;
+  };
+  control.addEventListener('click', () => setOpen(list.hidden));
+  items.forEach((x, i) => x.addEventListener('click', () => choose(i)));
+  control.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !list.hidden) { e.preventDefault(); e.stopPropagation(); setOpen(false); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (list.hidden) setOpen(true); else mark(active + (e.key === 'ArrowDown' ? 1 : -1));
+    } else if ((e.key === 'Enter' || e.key === ' ') && !list.hidden) { e.preventDefault(); choose(active); }
+  });
+  document.addEventListener('click', e => { if (!root.contains(e.target)) setOpen(false); });
+});
+
+/* Table */
+const deliveryInputs = () => [...document.querySelectorAll('.number[data-kind="delivery"] input')];
+const isChanged = i => Number(i.value) !== Number(i.dataset.saved);
+const changedDelivery = () => deliveryInputs().filter(isChanged);
+
+const isZero = i => i.value !== '' && Number(i.value) === 0;
+
+function applyGreyOut() {
+  SHIFTS.forEach(s => {
+    const off = isZero($('pickers-' + s.id));
+    document.querySelector(`.shift-row[data-shift="${s.id}"]`).classList.toggle('off', off);
+    document.querySelectorAll(`[data-slot-of="${s.id}"]`).forEach(row => {
+      const inp = row.querySelector('input');
+      row.classList.toggle('off', off || isZero(inp));
+      /* No pickers means no delivery to edit. A slot at 0 stays editable so it can be reopened. */
+      inp.disabled = off;
+      row.querySelectorAll('.steps button').forEach(b => { b.disabled = off; });
+      const ch = row.nextElementSibling;
+      if (ch && ch.classList.contains('ch-row')) ch.classList.toggle('off', row.classList.contains('off'));
+    });
+  });
+}
+
+function setShift(s, open) {
+  s.open = open;
+  document.querySelector(`[data-toggle="${s.id}"]`).setAttribute('aria-expanded', open);
+  document.querySelectorAll(`[data-slot-of="${s.id}"]`).forEach(r => { r.hidden = !open; });
+  syncCh();
+}
+/* Pinned breakdowns: a row under the slot on desktop, lines inside the slot card on mobile */
+function syncCh() {
+  const small = mobile.matches;
+  document.querySelectorAll('#rows [data-ch]').forEach(b => {
+    const key = b.dataset.ch, on = openCh.has(key);
+    const s = SHIFTS.find(x => x.id === key.split('-')[0]);
+    b.setAttribute('aria-expanded', on);
+    b.closest('tr').classList.toggle('ch-open', on && !small);
+    document.querySelector(`[data-ch-of="${key}"]`).hidden = small || !s.open || !on;
+    document.querySelector(`[data-split-of="${key}"]`).hidden = !small || !on;
+  });
+}
+
+/* Fill the breakdown (desktop row, mobile lines) for the current Period */
+const chVals = list => list.map(([n, v]) => `${n} <b>${v}</b>`).join('<span class="ch-sep">·</span>');
+function updateChannels() {
+  let gi = 0;
+  SHIFTS.forEach(s => s.slots.forEach((r, i) => {
+    const key = `${s.id}-${i}`, info = channelsFor(r, gi++);
+    chNow[key] = { used: r[3], info };
+    const full = fullNow[key] ?? r[2], extUsed = info.external.reduce((a, [, v]) => a + v, 0);
+    const ext = full ? Math.min(full, Math.max(Math.round(EXT_SHARE[gi - 1] * full), extUsed)) : 0;
+    const slotRow = document.querySelectorAll(`[data-slot-of="${s.id}"]`)[i], cell = slotRow && slotRow.querySelector('.c-full');
+    if (cell) {
+      cell.querySelectorAll('.ext-line').forEach(x => x.remove());
+      if (full) cell.insertAdjacentHTML('beforeend', `<small class="ext-line">${ext} external · ${Math.round(ext / full * 100)}%</small>`);
+    }
+    $('ch-box-' + key).innerHTML = `<div class="ch-line"><span class="ch-grp">Internal</span><span>${chVals(info.internal)}</span></div><div class="ch-line"><span class="ch-grp">External</span><span>${chVals(info.external)}</span></div>`;
+    const sp = list => list.map(([n, v]) => `<div class="sp-r"><span>${n}:</span><b>${v}</b></div>`).join('');
+    document.querySelector(`[data-split-of="${key}"]`).innerHTML = `<div class="sp-h">Internal</div>${sp(info.internal)}<div class="sp-h">External</div>${sp(info.external)}`;
+  }));
+}
+
+function recalc() {
+  if (!currentStore) return;
+  let cap = 0, booked = 0;
+  SHIFTS.forEach(s => {
+    const inp = $('pickers-' + s.id);
+    const pickers = inp.value === '' ? s.pickers : Number(inp.value);
+    document.querySelectorAll(`[data-slot-of="${s.id}"]`).forEach((row, i) => {
+      const r = s.slots[i], full = fullFor(r, pickers), left = full - r[3] - r[4];
+      const cell = row.querySelector('.c-full');
+      cell.innerHTML = full === r[2] ? `${full}` : `${full}<span class="was">was ${r[2]}</span>`;
+      cell.classList.toggle('recalc', full !== r[2]);
+      row.querySelector('.c-avail').innerHTML = badge(left, full);
+      cap += full; booked += r[3] + r[4];
+      fullNow[`${s.id}-${i}`] = full;
+    });
+  });
+  $('kpi-cap').textContent = fmt(cap);
+  $('kpi-avail').textContent = fmt(cap - booked);
+}
+
+function refresh() {
+  applyGreyOut();
+  recalc();
+  updateChannels();
+  syncCh();
+  document.querySelectorAll('.number input').forEach(i => i.parentElement.classList.toggle('changed', isChanged(i)));
+  SHIFTS.forEach(s => {
+    const n = deliveryInputs().filter(i => i.id.startsWith(`delivery-${s.id}-`) && isChanged(i)).length;
+    const el = $('unsaved-' + s.id);
+    el.hidden = s.open || !n;
+    el.textContent = `${n} unsaved ${n === 1 ? 'change' : 'changes'}`;
+  });
+}
+$('rows').addEventListener('click', e => {
+  const c = e.target.closest('[data-ch]');
+  if (c) {
+    const key = c.dataset.ch;
+    openCh.has(key) ? openCh.delete(key) : openCh.add(key);
+    hideTip();
+    syncCh();
+    return;
+  }
+  const t = e.target.closest('[data-toggle]');
+  if (t) {
+    const s = SHIFTS.find(x => x.id === t.dataset.toggle);
+    setShift(s, !s.open);
+    refresh();
+    return;
+  }
+  const b = e.target.closest('[data-step]');
+  if (b) {
+    const inp = b.closest('.number').querySelector('input');
+    inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) + Number(b.dataset.step));
+    refresh();
+  }
+});
+$('rows').addEventListener('input', e => {
+  if (!e.target.matches('.number input')) return;
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+  refresh();
+});
+$('rows').addEventListener('focusout', e => {
+  if (e.target.matches('.number input') && e.target.value === '') { e.target.value = e.target.dataset.saved; refresh(); }
+});
+$('rows').addEventListener('keydown', e => {
+  if (!e.target.matches('.number input') || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  e.preventDefault();
+  e.target.value = Math.max(0, (parseInt(e.target.value, 10) || 0) + (e.key === 'ArrowUp' ? 1 : -1));
+  refresh();
+});
+
+/* Quick look: tooltip on hover (or keyboard focus on the chevron), not shown when the slot is already open */
+const tip = document.createElement('div');
+tip.className = 'ch-tip'; tip.setAttribute('role', 'tooltip'); tip.id = 'ch-tip'; tip.hidden = true;
+document.body.appendChild(tip);
+const canHover = matchMedia('(hover: hover) and (pointer: fine)');
+function showTip(cell) {
+  if (fulfil === 'Collect') return hideTip();
+  const key = cell.dataset.chCell, d = chNow[key];
+  if (!d || openCh.has(key) || mobile.matches) return hideTip();
+  const rows = l => l.map(([n, v]) => `<div><span>${n}</span><b>${v}</b></div>`).join('');
+  tip.innerHTML = `<div class="tip-total"><span>Used</span><b>${d.used}</b></div><div class="tip-h">Internal</div>${rows(d.info.internal)}<div class="tip-h">External</div>${rows(d.info.external)}`;
+  tip.hidden = false;
+  const r = cell.getBoundingClientRect(), t = tip.getBoundingClientRect();
+  let top = r.top - t.height - 8;
+  if (top < 8) top = r.bottom + 8;
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - t.width / 2), innerWidth - t.width - 8);
+  tip.style.top = top + 'px'; tip.style.left = left + 'px';
+  cell.querySelector('[data-ch]').setAttribute('aria-describedby', 'ch-tip');
+}
+function hideTip() {
+  tip.hidden = true;
+  document.querySelectorAll('[aria-describedby="ch-tip"]').forEach(x => x.removeAttribute('aria-describedby'));
+}
+$('rows').addEventListener('mouseover', e => {
+  if (!canHover.matches) return;
+  const cell = e.target.closest('[data-ch-cell]');
+  if (cell && !cell.contains(e.relatedTarget)) showTip(cell);
+});
+$('rows').addEventListener('mouseout', e => {
+  const cell = e.target.closest('[data-ch-cell]');
+  if (cell && !cell.contains(e.relatedTarget)) hideTip();
+});
+$('rows').addEventListener('focusin', e => { if (e.target.matches('[data-ch]') && e.target.matches(':focus-visible')) showTip(e.target.closest('[data-ch-cell]')); });
+$('rows').addEventListener('focusout', e => { if (e.target.matches('[data-ch]')) hideTip(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !tip.hidden) hideTip(); });
+addEventListener('scroll', hideTip, true);
+
+function commit() {
+  document.querySelectorAll('.number input').forEach(i => { i.value = Number(i.value); i.dataset.saved = i.value; });
+  SHIFTS.forEach(s => {
+    s.pickers = Number($('pickers-' + s.id).value);
+    s.slots.forEach((r, n) => { r[1] = Number($(`delivery-${s.id}-${n}`).value); r[2] = fullFor(r, s.pickers); });
+  });
+  refresh();
+}
+function toast(text, success) {
+  $('toast-text').textContent = text;
+  $('toast').classList.toggle('success', !!success);
+  $('toast-icon').innerHTML = `<use href="#i-${success ? 'check' : 'info'}"/>`;
+  $('toast').hidden = false;
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => { $('toast').hidden = true; }, 4000);
+}
+
+$('save').addEventListener('click', () => {
+  const n = changedDelivery().length;
+  if (n) return openDrawer(n);
+  const others = [...document.querySelectorAll('.number[data-kind="pickers"] input')].some(isChanged);
+  if (others) { commit(); toast('Changes saved. Fulfilment capacity updated for the new picker numbers.', true); }
+  else toast('No changes to save. Change a Delivery number first.');
+});
+
+/* Drawer */
+const selected = () => [...$('reasons').querySelectorAll('[aria-pressed="true"]')].map(b => b.dataset.reason);
+function syncDetails() {
+  const other = selected().includes('Other');
+  $('details-req').hidden = !other;
+  if (!other || $('details').value.trim()) { $('details-error').hidden = true; $('details').classList.remove('invalid'); }
+}
+function openDrawer(n) {
+  $('toast').hidden = true;
+  $('changed-count').textContent = `${n} ${n === 1 ? 'slot' : 'slots'} changed`;
+  document.body.classList.add('open');
+  document.documentElement.style.overflow = 'hidden';
+  $('app').inert = true; $('drawer').inert = false;
+  $('drawer-title').focus();
+}
+function closeDrawer() {
+  document.body.classList.remove('open');
+  document.documentElement.style.overflow = '';
+  $('app').inert = false; $('drawer').inert = true;
+  $('save').focus();
+}
+function resetForm() {
+  $('reasons').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  $('details').value = '';
+  $('reason-error').hidden = true;
+  syncDetails();
+}
+$('reasons').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
+  if (selected().length) $('reason-error').hidden = true;
+  syncDetails();
+});
+$('details').addEventListener('input', syncDetails);
+['drawer-close', 'drawer-cancel', 'overlay'].forEach(id => $(id).addEventListener('click', closeDrawer));
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('open')) return;
+  if (e.key === 'Escape') return closeDrawer();
+  if (e.key !== 'Tab') return;
+  const items = [...$('drawer').querySelectorAll('button, textarea')].filter(x => !x.disabled);
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === $('drawer-title'))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+$('reason-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const reasons = selected();
+  const noReason = !reasons.length;
+  const noDetails = reasons.includes('Other') && !$('details').value.trim();
+  $('reason-error').hidden = !noReason;
+  $('details-error').hidden = !noDetails;
+  $('details').classList.toggle('invalid', noDetails);
+  if (noReason) return $('reasons').querySelector('button').focus();
+  if (noDetails) return $('details').focus();
+  const n = changedDelivery().length;
+  commit();
+  closeDrawer();
+  resetForm();
+  toast(`Saved ${n} delivery ${n === 1 ? 'change' : 'changes'}. Reason: ${reasons.join(', ')}.`, true);
+});
+/* Mobile: burger menu, and only Shift A starts open as in Figma */
+const mobile = matchMedia('(max-width: 760px)');
+function setMenu(open) {
+  $('app').classList.toggle('menu-open', open);
+  document.documentElement.style.overflow = open ? 'hidden' : '';
+  (open ? $('menu-close') : $('burger')).focus({ preventScroll: true });
+}
+$('burger').addEventListener('click', () => setMenu(true));
+$('menu-close').addEventListener('click', () => setMenu(false));
+document.querySelectorAll('.menu a.nav').forEach(a => a.addEventListener('click', () => { if (mobile.matches) setMenu(false); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('app').classList.contains('menu-open')) setMenu(false); });
+function applyDefaults() {
+  $('app').classList.remove('menu-open', 'collapsed');
+  if (!document.body.classList.contains('open')) document.documentElement.style.overflow = '';
+  if (!SHIFTS.length) return;
+  setShift(SHIFTS[0], true);
+  setShift(SHIFTS[1], !mobile.matches);
+  setShift(SHIFTS[2], false);
+  refresh();
+}
+mobile.addEventListener('change', applyDefaults);
+
+/* All stores overview, then a selected store */
+const fmt = n => n.toLocaleString('en-US');
+function setKpis(v) {
+  $('kpi-cap').textContent = fmt(v.cap); $('kpi-booked').textContent = fmt(v.booked);
+  $('kpi-avail').textContent = fmt(v.avail); $('kpi-fc').textContent = fmt(v.fc);
+}
+$('store-rows').innerHTML = STORES.map((s, i) => `
+  <tr class="store-row${s.off ? ' off' : ''}">
+    <td class="s-name"><button class="store-link" type="button" data-open-store="${i}">${s.name}</button></td>
+    <td class="c-row" data-label="Fulfilment:">${s.fulfil}</td>
+    <td class="c-row" data-label="Orders forecast:"><span class="two-line">${fmt(s.fc)}<small class="${s.exClass}">${s.ex}${s.off ? '' : '<span class="vs"> vs capacity</span>'}</small></span></td>
+    <td class="c-row" data-label="Used:"><div class="booked"><span>${s.cap ? `${fmt(s.booked)} of ${fmt(s.cap)}` : '–'}</span><div class="bar"><i style="width:${s.cap ? Math.round(s.booked / s.cap * 100) : 0}%"></i></div></div></td>
+    <td class="c-row" data-label="Available:">${s.avail}</td>
+    <td class="c-row" data-label="Full slots:">${s.cap ? `${s.fullSlots} of 11` : '–'}</td>
+    <td class="s-status"><span class="badge ${s.tone}">${s.status}</span></td>
+  </tr>`).join('');
+
+function showStore(store) {
+  currentStore = store;
+  $('app').classList.toggle('overview', !store);
+  $('stores-view').hidden = !!store;
+  $('store-view').hidden = !store;
+  $('store').setValue(store ? store.name : 'All stores');
+  if (store) { $('store-title').textContent = store.name; }
+  setKpis(store || ALL_TOTALS);
+  if (store) {
+    store.shifts = store.shifts || withRates(shiftsFor(store));
+    openCh.clear(); hideTip();
+    setFulfil('Delivery');
+    SHIFTS = store.shifts;
+    renderRows();
+    applyDefaults();
+  } else {
+    SHIFTS = [];
+    $('rows').innerHTML = '';
+  }
+  $('toast').hidden = true;
+  window.scrollTo(0, 0);
+}
+let pendingStore;
+const hasEdits = () => [...document.querySelectorAll('#rows .number input')].some(isChanged);
+function requestStore(store) {
+  if (store === currentStore) return;
+  if (!hasEdits()) return showStore(store);
+  pendingStore = store;
+  $('store').setValue(currentStore.name);
+  $('confirm').hidden = false;
+  $('app').inert = true;
+  $('confirm-keep').focus();
+}
+function closeConfirm() { $('confirm').hidden = true; $('app').inert = false; $('store-control').focus(); }
+$('confirm-keep').addEventListener('click', closeConfirm);
+$('confirm-discard').addEventListener('click', () => { closeConfirm(); showStore(pendingStore); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('confirm').hidden) closeConfirm(); });
+$('store').addEventListener('choose', e => requestStore(STORES.find(s => s.name === e.detail) || null));
+$('store-rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-open-store]');
+  if (b) requestStore(STORES[Number(b.dataset.openStore)]);
+});
+$('period').addEventListener('choose', e => {
+  period = e.detail === 'Today' ? 'today' : 'other';
+  hideTip();
+  if (currentStore) updateChannels();
+});
+function setFulfil(v) {
+  fulfil = v;
+  $('fulfil-seg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.textContent === v));
+  $('store-view').classList.toggle('collect-mode', v === 'Collect');
+  if (v === 'Collect') { openCh.clear(); hideTip(); }
+  if (currentStore) syncCh();
+}
+$('fulfil-seg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) setFulfil(b.textContent);
+});
+showStore(null);
+</script>
+
+</body></html>
