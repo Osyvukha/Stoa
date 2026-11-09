@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Capacity — Store · AD Store Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="assets/styles.css?v=2">
+</head>
+<body>
+<div class="app">
+  <nav class="navbar" id="navbar"></nav>
+
+  <main class="main">
+    <header class="page-header">
+      <h1>Capacity</h1>
+      <label class="store-picker">Store <select class="select" id="store-select"></select></label>
+    </header>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Capacity</span><span class="theme-icon"><i class="ti ti-calendar"></i></span></div>
+        <div class="stat__value">6,160</div>
+        <div class="stat__diff"><b class="up"><i class="ti ti-trending-up"></i> +3%</b><span class="up">slots</span> vs last week</div>
+      </div>
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Booked</span><span class="theme-icon"><i class="ti ti-shopping-cart"></i></span></div>
+        <div class="stat__value">4,758</div>
+        <div class="stat__diff"><b class="up"><i class="ti ti-trending-up"></i> +5.1%</b> vs last week</div>
+      </div>
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Available</span><span class="theme-icon"><i class="ti ti-loader-2"></i></span></div>
+        <div class="stat__value">1,142</div>
+        <div class="stat__diff"><b class="down"><i class="ti ti-trending-down"></i> −180</b> slots vs last week</div>
+      </div>
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Demand forecast</span><span class="theme-icon"><i class="ti ti-user"></i></span></div>
+        <div class="stat__value">2,150</div>
+        <div class="stat__diff"><b class="up"><i class="ti ti-trending-up"></i> +9%</b><span class="up">orders</span> vs last week</div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="segmented"><button class="active">Delivery</button><button>Click &amp; collect</button></div>
+      <div class="segmented"><button class="active">Day</button><button>Week</button></div>
+      <div class="chips" id="days"></div>
+    </div>
+
+    <section class="paper">
+      <div class="paper__header">
+        <h2>Overview</h2>
+        <button class="btn btn-filled" id="save-changes">Save changes</button>
+      </div>
+      <table>
+        <thead>
+          <tr class="group">
+            <th colspan="4"></th>
+            <th colspan="4" class="span" style="text-align:center">Orders capacity</th>
+            <th></th>
+          </tr>
+          <tr class="cols">
+            <th style="width:132px">Shift</th>
+            <th style="width:92px">Pickers</th>
+            <th style="width:120px">Time slot</th>
+            <th style="width:92px">Delivery</th>
+            <th style="width:92px">Full</th>
+            <th style="width:108px">Used</th>
+            <th style="width:96px">Reserved</th>
+            <th style="width:108px">Available</th>
+            <th>Orders forecast</th>
+          </tr>
+        </thead>
+        <tbody id="shifts"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<!-- Delivery reason modal -->
+<div class="overlay" id="reason-modal" role="dialog" aria-modal="true" aria-labelledby="reason-title">
+  <div class="modal">
+    <div class="modal__header">
+      <h3 id="reason-title">Why did delivery change?</h3>
+      <button class="close-btn" data-close aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal__count" id="changed-count">3 slots changed</div>
+    <span class="field-label">Reason <span class="req">*</span></span>
+    <div class="chips" id="reasons"></div>
+    <label class="field-label" for="details">Details</label>
+    <textarea class="textarea" id="details" placeholder="Add details if needed. Required for Other."></textarea>
+    <div class="error-text" id="details-error">Please add details for “Other”.</div>
+    <div class="modal__footer">
+      <button class="btn btn-default" data-close>Cancel</button>
+      <button class="btn btn-filled" id="save-reason">Save reason</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js?v=2"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const store = params.get("store") || "Kifisias 120, Marousi";
+  renderStoreSelect(store);
+  document.title = `Capacity — ${store} · AD Store Dashboard`;
+
+  // [time, delivery, full, used, reserved, forecast, extra%, tone]
+  const SHIFTS = [
+    { name: "Shift A", hours: "08:00 – 12:00", pickers: 3, open: true, slots: [
+      ["08:00 – 09:00", 3, 90, 80, 5, 92, 3, "up"],
+      ["09:00 – 10:00", 3, 80, 70, 5, 104, 12, "warn"],
+      ["10:00 – 11:00", 3, 50, 50, 0, 61, 2, "up"],
+      ["11:00 – 12:00", 3, 90, 80, 5, 118, 22, "down"],
+    ]},
+    { name: "Shift B", hours: "12:00 – 16:00", pickers: 4, open: true, slots: [
+      ["12:00 – 13:00", 3, 100, 50, 20, 143, 25, "down"],
+      ["13:00 – 14:00", 3, 110, 100, 5, 97, 9, "warn"],
+      ["14:00 – 15:00", 3, 40, 40, 0, 46, 1, "up"],
+      ["15:00 – 16:00", 3, 80, 70, 5, 85, 6, "up"],
+    ]},
+    { name: "Shift C", hours: "16:00 – 19:00", pickers: 2, open: false, slots: [
+      ["16:00 – 17:00", 3, 50, 50, 0, 58, 4, "up"],
+      ["17:00 – 18:00", 3, 90, 80, 5, 112, 15, "warn"],
+      ["18:00 – 19:00", 3, 100, 50, 20, 131, 20, "down"],
+    ]},
+  ];
+
+  const numInput = (value, kind, label) => `
+    <div class="num"><input type="number" min="0" max="20" value="${value}" data-kind="${kind}" data-initial="${value}" aria-label="${label}">
+      <div class="ctrl"><button type="button" data-step="1" tabindex="-1"><i class="ti ti-chevron-up"></i></button><button type="button" data-step="-1" tabindex="-1"><i class="ti ti-chevron-down"></i></button></div></div>`;
+
+  const badge = (full, used, reserved) => {
+    const left = full - used - reserved;
+    if (left <= 0) return `<span class="badge red">Full</span>`;
+    return `<span class="badge ${left >= 20 ? "green" : "orange"}">${left} left</span>`;
+  };
+
+  document.getElementById("shifts").innerHTML = SHIFTS.map((s, si) => `
+    <tr class="shift ${s.open ? "" : "collapsed"}" data-shift="${si}">
+      <td><div class="shift-cell"><button class="toggle" aria-expanded="${s.open}" aria-label="Toggle ${s.name}"><i class="ti ti-chevron-down"></i></button>
+        <div class="shift-name">${s.name}<small>${s.hours}</small></div></div></td>
+      <td>${numInput(s.pickers, "pickers", s.name + " pickers")}</td>
+      <td colspan="7"></td>
+    </tr>
+    ${s.slots.map(([t, d, full, used, res, fc, ex, tone]) => `
+      <tr class="slot" data-parent="${si}" ${s.open ? "" : "hidden"}>
+        <td></td><td></td>
+        <td>${t}</td>
+        <td>${numInput(d, "delivery", t + " delivery")}</td>
+        <td>${full}</td><td>${used}</td><td>${res}</td>
+        <td>${badge(full, used, res)}</td>
+        <td>${fc}<div class="sub ${tone}">+${ex}% extra</div></td>
+      </tr>`).join("")}
+  `).join("");
+
+  // Expand / collapse shift groups
+  document.querySelectorAll("tr.shift .toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const row = btn.closest("tr");
+      const collapsed = row.classList.toggle("collapsed");
+      btn.setAttribute("aria-expanded", !collapsed);
+      document.querySelectorAll(`tr.slot[data-parent="${row.dataset.shift}"]`).forEach((r) => (r.hidden = collapsed));
+    });
+  });
+
+  // Number inputs: stepper buttons + change tracking
+  const inputs = () => [...document.querySelectorAll(".num input")];
+  const markChanged = (input) => input.closest(".num").classList.toggle("changed", input.value !== input.dataset.initial);
+  document.querySelectorAll(".num").forEach((wrap) => {
+    const input = wrap.querySelector("input");
+    wrap.querySelectorAll("[data-step]").forEach((b) =>
+      b.addEventListener("click", () => {
+        input.value = Math.min(20, Math.max(0, (+input.value || 0) + +b.dataset.step));
+        markChanged(input);
+      })
+    );
+    input.addEventListener("input", () => markChanged(input));
+  });
+
+  // Modal
+  const modal = document.getElementById("reason-modal");
+  const reasons = document.getElementById("reasons");
+  const details = document.getElementById("details");
+  const detailsError = document.getElementById("details-error");
+  const REASONS = ["Staff shortage", "Vehicle issue", "High demand", "Store event", "Other"];
+
+  function openModal(changed) {
+    const slots = changed.filter((i) => i.dataset.kind === "delivery").length;
+    const shifts = changed.filter((i) => i.dataset.kind === "pickers").length;
+    document.getElementById("changed-count").textContent = [
+      slots && `${slots} slot${slots > 1 ? "s" : ""} changed`,
+      shifts && `${shifts} shift${shifts > 1 ? "s" : ""} changed`,
+    ].filter(Boolean).join(" · ");
+    reasons.innerHTML = REASONS.map((r, i) => chip(r, { checked: i === 0 })).join("");
+    details.value = "";
+    details.classList.remove("error");
+    detailsError.classList.remove("show");
+    modal.classList.add("open");
+    reasons.querySelector(".chip").focus();
+  }
+  const closeModal = () => modal.classList.remove("open");
+  initChipGroup(reasons, () => { details.classList.remove("error"); detailsError.classList.remove("show"); });
+
+  document.getElementById("save-changes").addEventListener("click", () => {
+    const changed = inputs().filter((i) => i.value !== i.dataset.initial);
+    if (!changed.length) return toast("No changes to save. Edit Pickers or Delivery first.", "info");
+    openModal(changed);
+  });
+  modal.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeModal));
+  modal.addEventListener("click", (e) => e.target === modal && closeModal());
+  document.addEventListener("keydown", (e) => e.key === "Escape" && closeModal());
+
+  document.getElementById("save-reason").addEventListener("click", () => {
+    const reason = reasons.querySelector(".chip.checked").textContent.trim();
+    if (reason === "Other" && !details.value.trim()) {
+      details.classList.add("error");
+      detailsError.classList.add("show");
+      details.focus();
+      return;
+    }
+    inputs().forEach((i) => { i.dataset.initial = i.value; markChanged(i); });
+    closeModal();
+    toast(`Changes saved · Reason: ${reason}`);
+  });
+</script>
+</body>
+</html>

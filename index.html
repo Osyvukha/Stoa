@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Capacity · AB Store Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css?v=10">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"></path></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 21h18M4 21V10M20 21V10M3 7l2-4h14l2 4a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0"></path><path d="M9 21v-6h6v6"></path></symbol>
+  <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M4 12h12M4 12l4 4M4 12l4-4M20 5v14"></path></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"></circle><path d="m21 21-6-6"></path></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M4 11h16M11 15h1v3"></path></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle><path d="M17 17H6V3H4M6 5l14 1-1 7H6"></path></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"></path><path d="M9 12h12l-3-3M18 15l3-3"></path></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M14 7h7v7"></path></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m3 7 6 6 4-4 8 8M21 10v7h-7"></path></symbol>
+  <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+  <symbol id="i-chev-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"></path></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01M11 12h1v4h1"></path></symbol>
+</svg>
+
+<div class="app" id="app">
+  <aside class="menu">
+    <div class="logo">
+      <span class="logo-mark"><svg class="icon"><use href="#i-store"></use></svg></span>
+      <b>AB</b>
+      <button class="icon-btn" id="menu-toggle" type="button" aria-label="Collapse menu"><svg class="icon"><use href="#i-collapse"></use></svg></button>
+      <button class="icon-btn" id="menu-close" type="button" aria-label="Close menu"><svg class="icon"><use href="#i-x"></use></svg></button>
+    </div>
+    <div class="menu-group">
+      <div class="menu-label">Main Menu</div>
+      <div class="main-nav">
+        <a class="nav" href="#capacity" data-soon="" title="Orders"><svg class="icon"><use href="#i-search"></use></svg><span>Orders</span></a>
+        <a class="nav active" href="#capacity" aria-current="page" title="Capacity"><svg class="icon"><use href="#i-calendar"></use></svg><span>Capacity</span></a>
+        <a class="nav" href="#capacity" data-soon="" title="In-store picking"><svg class="icon"><use href="#i-cart"></use></svg><span>In-store picking</span></a>
+      </div>
+      <hr>
+      <div id="tools-group">
+        <div class="menu-label">Tools</div>
+        <div class="nav" title="Language"><svg class="icon"><use href="#i-globe"></use></svg><span>Language</span>
+          <div class="select select-xs" id="language" data-label="Language" data-options="Eng|Ελ"><button class="select-control" id="language-control" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="language-list" aria-label="Language"><span class="select-value">Eng</span><svg class="icon"><use href="#i-chev-down"></use></svg></button>
+    <ul class="select-list" id="language-list" role="listbox" aria-label="Language" hidden=""><li role="option" aria-selected="true"><svg class="icon"><use href="#i-check"></use></svg><span>Eng</span></li><li role="option" aria-selected="false"><svg class="icon"><use href="#i-check"></use></svg><span>Ελ</span></li></ul></div>
+        </div>
+        <a class="nav" href="#capacity" data-soon="" title="Sign Out"><svg class="icon"><use href="#i-logout"></use></svg><span>Sign Out</span></a>
+      </div>
+    </div>
+  </aside>
+
+  <main id="capacity">
+    <header class="navbar">
+      <h1>Capacity</h1>
+      <button class="icon-btn" id="burger" type="button" aria-label="Open menu"><svg class="icon"><use href="#i-menu"></use></svg></button>
+      <div class="pickers">
+        <div class="store"><span>Store</span><div class="select" id="store" data-label="Store" data-options="All stores"></div></div>
+        <div class="store period"><span>Period</span><div class="select" id="period" data-label="Period" data-options="Today|Fri 16|Sat 17|Mon 19|Tue 20|Wed 21"></div></div>
+      </div>
+    </header>
+
+
+    <section class="kpis" aria-label="Summary">
+      <div class="kpi"><div class="kpi-top">Total capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-cap">760</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+3%</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Used capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-booked">745</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+5.1%</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Available capacity<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-avail">15</div><div class="delta"><svg class="icon down"><use href="#i-down"></use></svg><b class="down">−180</b>vs last week</div></div></div>
+      <div class="kpi"><div class="kpi-top">Orders forecast<span class="tile"><svg class="icon"><use href="#i-calendar"></use></svg></span></div><div class="kpi-row"><div class="kpi-value" id="kpi-fc">980</div><div class="delta"><svg class="icon up"><use href="#i-up"></use></svg><b class="up">+9%</b>vs last week</div></div></div>
+    </section>
+
+
+    <section class="paper" id="stores-view" hidden="">
+      <div class="toolbar"><h2 id="stores-title">Stores</h2></div>
+      <div class="stores-x">
+        <div class="stores-head" aria-hidden="true">
+          <table class="stores-table">
+            <colgroup><col style="width:25.7%"><col style="width:13.3%"><col style="width:14.8%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:13.4%"></colgroup>
+            <thead>
+              <tr><th rowspan="2">Store</th><th rowspan="2">Fulfilment</th><th colspan="2" class="group">Fulfillment capacity (Orders)</th><th rowspan="2">Full slots</th><th rowspan="2">Orders forecast</th><th rowspan="2">Status</th></tr>
+              <tr><th>Used</th><th>Available</th></tr>
+            </thead>
+          </table>
+        </div>
+        <div class="scroll-frame" id="stores-frame">
+          <div class="stores-scroll" tabindex="0" role="region" aria-label="All stores">
+            <table class="stores-table">
+              <colgroup><col style="width:25.7%"><col style="width:13.3%"><col style="width:14.8%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:13.4%"></colgroup>
+              <thead class="sr-only">
+                <tr><th scope="col">Store</th><th scope="col">Fulfilment</th><th scope="col">Used</th><th scope="col">Available</th><th scope="col">Full slots</th><th scope="col">Orders forecast</th><th scope="col">Status</th></tr>
+              </thead>
+              <tbody id="store-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="compare" id="compare" role="group" aria-label="Prototype: compare options" hidden>
+      <span>Prototype · compare</span>
+      <div class="segmented"><button type="button" data-opt="1" aria-pressed="true">Option 1 · Switches</button><button type="button" data-opt="4" aria-pressed="false">Option 4 · Sections</button></div>
+    </div>
+    <section class="paper" id="store-view">
+      <div class="toolbar">
+        <h2 id="store-title">Store</h2>
+        <div class="save-bar"><button class="btn btn-filled" id="save" type="button">Save changes</button></div>
+      </div>
+      <p class="ful-row" id="store-ful"><span>Fulfilment:</span><b></b></p>
+      <div class="store-controls" id="store-controls" role="group" aria-label="Shift filters">
+        <div class="segmented" id="seg-ful" role="group" aria-label="Fulfilment"></div>
+        <div class="segmented" id="seg-src" role="group" aria-label="Order source"></div>
+        <div class="segmented" id="seg-type" role="group" aria-label="Delivery type"></div>
+      </div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Capacity by shift and time slot">
+        <table>
+          <colgroup><col style="width:13.2%"><col style="width:9.2%"><col style="width:14.4%"><col style="width:9.2%"><col style="width:9.2%"><col style="width:10.8%"><col style="width:9.6%"><col style="width:10.8%"><col style="width:13.6%"></colgroup>
+          <thead>
+            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
+            <tr><th scope="col">Total</th><th scope="col">Used</th><th scope="col">Reserved</th><th scope="col">Available</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" inert="">
+  <div class="drawer-head">
+    <h2 id="drawer-title" tabindex="-1">Why did delivery change?</h2>
+    <button class="close" id="drawer-close" type="button" aria-label="Close and keep editing"><svg class="icon"><use href="#i-x"></use></svg></button>
+  </div>
+  <form class="drawer-form" id="reason-form" novalidate="">
+    <div class="drawer-body">
+      <h3 id="changed-count">0 slots changed</h3>
+      <hr>
+      <div class="field">
+        <h3 id="reason-label">Reason <span class="req" aria-hidden="true">*</span></h3>
+        <div class="chips reasons" id="reasons" role="group" aria-labelledby="reason-label"><button class="chip" type="button" data-reason="Staff shortage" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Staff shortage</button><button class="chip" type="button" data-reason="Vehicle issue" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Vehicle issue</button><button class="chip" type="button" data-reason="High demand" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>High demand</button><button class="chip" type="button" data-reason="Store event" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Store event</button><button class="chip" type="button" data-reason="Other" aria-pressed="false"><svg class="icon"><use href="#i-check"></use></svg>Other</button></div>
+        <div class="error" id="reason-error" role="alert" hidden="">Select at least one reason.</div>
+      </div>
+      <div class="field field-text">
+        <label for="details">Details <span class="req" id="details-req" aria-hidden="true" hidden="">*</span></label>
+        <textarea id="details" rows="3" placeholder="Add details if needed. Required for Other." aria-describedby="details-error"></textarea>
+        <div class="error" id="details-error" role="alert" hidden="">Add details to explain Other.</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline" id="drawer-cancel" type="button">Cancel</button>
+      <button class="btn btn-filled" id="save-reason" type="submit">Save reason</button>
+    </div>
+  </form>
+</aside>
+<div class="confirm" id="confirm" hidden="">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <h2 id="confirm-title">Discard unsaved changes?</h2>
+    <p id="confirm-text">Your edits for this store will be lost if you switch now.</p>
+    <div class="actions" style="padding:0">
+      <button class="btn btn-outline" id="confirm-keep" type="button">Keep editing</button>
+      <button class="btn btn-filled" id="confirm-discard" type="button">Discard changes</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden=""><svg class="icon" id="toast-icon"><use href="#i-info"></use></svg><span id="toast-text"></span></div>
+<script src="assets/app.js?v=9"></script>
+</body>
+</html>

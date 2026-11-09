@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Capacity — All stores · AD Store Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="assets/styles.css?v=2">
+</head>
+<body>
+<div class="app">
+  <nav class="navbar" id="navbar"></nav>
+
+  <main class="main">
+    <header class="page-header">
+      <h1>Capacity</h1>
+      <label class="store-picker">Store <select class="select" id="store-select"></select></label>
+    </header>
+
+    <div class="alert" id="attention">
+      <i class="ti ti-info-circle"></i>
+      <div class="alert__body">
+        <div class="alert__title">4 stores need attention today</div>
+        Korinthou 15 has no pickers. Vouliagmenis 45 is almost full. Demand is above capacity at Kifisias 120 and Patission 88.
+      </div>
+      <button class="close-btn" data-dismiss=".alert" aria-label="Dismiss"><i class="ti ti-x"></i></button>
+    </div>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Capacity</span><span class="theme-icon"><i class="ti ti-calendar"></i></span></div>
+        <div class="stat__value">3,800</div>
+        <div class="stat__diff"><b class="up"><i class="ti ti-trending-up"></i> +3%</b><span class="up">slots</span> vs last week</div>
+      </div>
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Booked</span><span class="theme-icon"><i class="ti ti-shopping-cart"></i></span></div>
+        <div class="stat__value">3,105</div>
+        <div class="stat__diff"><b class="up"><i class="ti ti-trending-up"></i> +5.1%</b> vs last week</div>
+      </div>
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Available</span><span class="theme-icon"><i class="ti ti-loader-2"></i></span></div>
+        <div class="stat__value">695</div>
+        <div class="stat__diff"><b class="down"><i class="ti ti-trending-down"></i> −180</b> slots vs last week</div>
+      </div>
+      <div class="stat">
+        <div class="stat__top"><span class="stat__label">Demand forecast</span><span class="theme-icon"><i class="ti ti-user"></i></span></div>
+        <div class="stat__value">4,387</div>
+        <div class="stat__diff"><b class="up"><i class="ti ti-trending-up"></i> +9%</b><span class="up">orders</span> vs last week</div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="segmented"><button class="active">Delivery</button><button>Click &amp; collect</button></div>
+      <div class="segmented"><button class="active">Day</button><button>Week</button></div>
+      <div class="chips" id="days"></div>
+    </div>
+
+    <section class="paper">
+      <div class="paper__header"><h2>Stores</h2></div>
+      <table>
+        <thead>
+          <tr class="group">
+            <th></th>
+            <th colspan="3" class="span" style="text-align:center">Orders capacity</th>
+            <th></th><th></th>
+          </tr>
+          <tr class="cols">
+            <th style="width:250px">Store</th>
+            <th style="width:210px">Booked</th>
+            <th style="width:100px">Available</th>
+            <th style="width:110px">Full slots</th>
+            <th style="width:180px">Orders forecast</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="stores"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="assets/app.js?v=2"></script>
+<script>
+  const rows = [
+    { store: STORES[0], disabled: true, booked: null, available: 0, full: "–", forecast: "420", note: "No capacity", tone: "", status: ["No pickers", "gray"] },
+    { store: STORES[1], booked: [745, 760], available: 15, full: "6 of 11", forecast: "980", note: "+29% vs capacity", tone: "down", status: ["Almost full", "red"] },
+    { store: STORES[2], booked: [790, 880], available: 90, full: "3 of 11", forecast: "1,047", note: "+19% vs capacity", tone: "down", status: ["High demand", "orange"] },
+    { store: STORES[3], booked: [560, 640], available: 80, full: "2 of 11", forecast: "690", note: "+8% vs capacity", tone: "warn", status: ["High demand", "orange"] },
+    { store: STORES[4], booked: [490, 700], available: 210, full: "0 of 11", forecast: "610", note: "−13% vs capacity", tone: "up", status: ["On track", "green"] },
+    { store: STORES[5], booked: [520, 820], available: 300, full: "0 of 11", forecast: "640", note: "−22% vs capacity", tone: "up", status: ["On track", "green"] },
+  ];
+  const href = (s) => "store.html?store=" + encodeURIComponent(s);
+  document.getElementById("stores").innerHTML = rows.map((r) => `
+    <tr class="${r.disabled ? "row-disabled" : "clickable"}" ${r.disabled ? "" : `data-href="${href(r.store)}"`}>
+      <td>${r.disabled ? r.store : `<a href="${href(r.store)}">${r.store}</a>`}</td>
+      <td>${r.booked ? `${r.booked[0]} of ${r.booked[1]}<div class="progress"><span style="width:${(r.booked[0] / r.booked[1]) * 100}%"></span></div>` : "–"}</td>
+      <td>${r.available}</td>
+      <td>${r.full}</td>
+      <td>${r.forecast}<div class="sub ${r.tone}">${r.note}</div></td>
+      <td><span class="badge ${r.status[1]}">${r.status[0]}</span></td>
+    </tr>`).join("");
+  document.querySelectorAll("tr[data-href]").forEach((tr) =>
+    tr.addEventListener("click", () => (location.href = tr.dataset.href))
+  );
+  renderStoreSelect("All stores");
+</script>
+</body>
+</html>
