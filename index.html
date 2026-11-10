@@ -5,12 +5,12 @@
 <style>
 /* Layout: the Figma Capacity screen, 240px menu + content with 80px gutters. Tokens mirror Ahold Mantine Design System 2026, light mode. */
 :root {
-  --body: #fff; --page: #f8f9fa; --text: #000; --dimmed: #495057; --placeholder: #adb5bd;
+  --body: #fff; --page: #f8f9fa; --text: #000; --dimmed: #495057; --placeholder: #6c757d;
   --border-subtle: #dee2e6; --border: #ced4da; --line: #e9ecef; --chip: #f1f3f5; --overlay: rgba(0,0,0,.6);
-  --blue: #228be6; --blue-hover: #1c7ed6; --blue-light: rgba(34,139,230,.1); --blue-tile: #e7f5ff;
-  --red: #e03131; --red-text: #c92a2a; --red-bg: #ffe3e3;
+  --blue: #1971c2; --blue-hover: #1864ab; --blue-light: rgba(34,139,230,.1); --blue-tile: #e7f5ff;
+  --red: #c92a2a; --red-text: #c92a2a; --red-bg: #ffe3e3;
   --orange-text: #bb3e0d; --orange-bg: #ffe8cc; --amber: #a85700;
-  --green: #267b37; --green-bg: #d3f9d8; --teal: #099268;
+  --green: #267b37; --green-bg: #d3f9d8; --teal: #087f5b;
   --xs: 10px; --sm: 12px; --md: 16px; --lg: 20px; --xl: 32px; --radius: 8px;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --shadow-xl: 0 1px 3px rgba(0,0,0,.05), rgba(0,0,0,.05) 0 36px 28px -7px, rgba(0,0,0,.04) 0 17px 17px -7px;
@@ -328,7 +328,7 @@ textarea.invalid { border-color: var(--red); }
   .stores-table td { height: auto; }
   .s-name { grid-column: 1; grid-row: 1; margin-bottom: 6px; min-width: 0; padding-right: 10px; }
   .s-status { grid-column: 2; grid-row: 1; margin-bottom: 6px; }
-  .bar, .vs { display: none; }
+  .bar { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style></head><body>
@@ -405,7 +405,7 @@ textarea.invalid { border-color: var(--red); }
         <table class="stores-table">
           <colgroup><col style="width:250px"><col style="width:130px"><col style="width:140px"><col style="width:140px"><col style="width:90px"><col style="width:90px"><col style="width:140px"></colgroup>
           <thead>
-            <tr><th rowspan="2" scope="col">Store</th><th rowspan="2" scope="col">Fulfilment</th><th rowspan="2" scope="col">Orders forecast</th><th colspan="2" class="group" scope="colgroup">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Full slots</th><th rowspan="2" scope="col">Status</th></tr>
+            <tr><th rowspan="2" scope="col">Store</th><th rowspan="2" scope="col">Fulfilment</th><th rowspan="2" scope="col">Orders forecast</th><th colspan="2" class="group" scope="colgroup">Fulfilment capacity (Orders)</th><th rowspan="2" scope="col">Full slots</th><th rowspan="2" scope="col">Status</th></tr>
             <tr><th scope="col">Used</th><th scope="col">Available</th></tr>
           </thead>
           <tbody id="store-rows"></tbody>
@@ -427,7 +427,7 @@ textarea.invalid { border-color: var(--red); }
         <table>
           <colgroup><col style="width:132px"><col style="width:92px"><col style="width:116px"><col style="width:92px"><col style="width:108px"><col style="width:120px"><col style="width:96px"><col style="width:108px"><col style="width:136px"></colgroup>
           <thead>
-            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup" id="cap-group">Fulfillment capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
+            <tr><th rowspan="2" scope="col">Shift</th><th rowspan="2" scope="col">Pickers</th><th rowspan="2" scope="col">Time slot</th><th rowspan="2" scope="col">Delivery</th><th colspan="4" class="group" scope="colgroup" id="cap-group">Fulfilment capacity (Orders)</th><th rowspan="2" scope="col">Orders forecast</th></tr>
             <tr><th scope="col">Total</th><th scope="col">Used</th><th scope="col">Reserved</th><th scope="col">Available</th></tr>
           </thead>
           <tbody id="rows"></tbody>
