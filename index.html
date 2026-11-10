@@ -949,7 +949,7 @@ $('store-rows').innerHTML = STORES.map((s, i) => `
   <tr class="store-row${s.off ? ' off' : ''}">
     <td class="s-name"><button class="store-link" type="button" data-open-store="${i}">${s.name}</button></td>
     <td class="c-row" data-label="Fulfilment:">${s.fulfil}</td>
-    <td class="c-row" data-label="Orders forecast:"><span class="two-line">${fmt(s.fc)}<small class="${s.exClass}">${s.ex}${s.off ? '' : '<span class="vs"> vs capacity</span>'}</small></span></td>
+    <td class="c-row" data-label="Orders forecast:"><span class="two-line">${fmt(s.fc)}<small class="${s.exClass}">${s.ex}${s.off ? '' : '<span class="vs"> capacity</span>'}</small></span></td>
     <td class="c-row" data-label="Used:"><div class="booked"><span>${s.cap ? `${fmt(s.booked)} of ${fmt(s.cap)}` : '–'}</span><div class="bar"><i style="width:${s.cap ? Math.round(s.booked / s.cap * 100) : 0}%"></i></div></div></td>
     <td class="c-row" data-label="Available:">${s.avail}</td>
     <td class="c-row" data-label="Full slots:">${s.cap ? `${s.fullSlots} of 11` : '–'}</td>
