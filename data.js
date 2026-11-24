@@ -37,27 +37,32 @@ window.DATA = {
     { p: "low", type: "idle", t: "Idle since Mon 10:30, 70% unused", s: "Calea Rahovei 266 · Sector 5 · Store", a: "Set FTE" }
   ],
   alertTypes: [["all", "All"], ["closed", "Store closed"], ["fte", "FTE zero"], ["prod", "Low productivity"], ["fill", "Fast fill"], ["fc", "Forecast above capacity"], ["idle", "Idle capacity"]],
+  // [label, value, unit, priority, description]
   thresholds: [
-    ["Store closed", 6, "h", "High"], ["FTE zero", 0, "FTE", "High"], ["Low productivity", 10, "%", "Medium"],
-    ["Fast fill", 20, "%", "Medium"], ["Forecast above capacity", 10, "%", "Medium"], ["Idle capacity", 30, "min", "Low"]
+    ["Store closed", 6, "h", "High", "Alert after closed for (hours)"], ["FTE zero", 0, "FTE", "High", "Alert when FTE is at or below"], ["Low productivity", 10, "%", "Medium", "Alert when below plan by (%)"],
+    ["Fast fill", 20, "%", "Medium", "Alert when filling faster than plan (%)"], ["Forecast above capacity", 10, "%", "Medium", "Alert when forecast is over by (%)"], ["Idle capacity", 30, "min", "Low", "Alert when unused for (minutes)"]
   ],
   // Bd. Timișoara 26: capacity, committed, available, forecast (placeholder). reserved = cap - committed - available
   timisoara: {
     slots: [
-      { r: "08:00–09:00", cap: 100, com: 65, av: 25, fc: 96 }, { r: "09:00–10:00", cap: 90, com: 58, av: 23, fc: 86 },
+      { r: "08:00–09:00", cap: 100, com: 65, av: 25, fc: 96 }, { r: "09:00–10:00", cap: 80, com: 58, av: 13, fc: 86 },
       { r: "10:00–11:00", cap: 60, com: 42, av: 0, fc: 64, closed: true }, { r: "11:00–12:00", cap: 80, com: 52, av: 20, fc: 84 },
-      { r: "12:00–13:00", cap: 80, com: 72, av: 2, fc: 82, internal: { "Same day": 43 }, market: { Wolt: 9, Foodora: 6, Skroutz: 5, Box: 3, Bolt: 3, Glovo: 3 } },
+      { r: "12:00–13:00", cap: 80, com: 72, av: 2, fc: 82, picking: { workload: "1,024 min", items: 465, prep: "32 s" }, internal: { "Same day": 43 }, market: { Wolt: 9, Foodora: 6, Skroutz: 5, Box: 3, Bolt: 3, Glovo: 3 } },
       { r: "13:00–14:00", cap: 100, com: 60, av: 30, fc: 87 }
     ]
   },
-  // Bd. Unirii 35 · Shift A overlapping windows
-  unirii: {
-    slots: [
-      ["08:00–09:00", 20, 18, 14, 2], ["08:00–10:30", 50, 46, 38, 6], ["08:00–12:00", 80, 76, 60, 10], ["08:30–09:30", 20, 22, 16, 2],
-      ["09:00–10:00", 20, 17, 12, 2], ["09:00–11:30", 50, 52, 40, 6], ["10:00–11:00", 20, 19, 20, 0], ["10:00–12:00", 40, 36, 24, 5],
-      ["11:00–12:00", 20, 21, 17, 2], ["11:30–12:00", 10, 9, 10, 0]
-    ].map(([r, cap, fc, com, res]) => ({ r, cap, fc, com, res, av: cap - com - res }))
-  },
+  // Bd. Unirii 35 · shifts with overlapping windows (Figma R17). Row: [window, total, forecast, committed, reserved, marketplace, delivery]
+  // Shift C rows are placeholders (the Figma frame shows Shift C collapsed).
+  unirii: (function () {
+    const mk = rows => rows.map(([r, cap, fc, com, res, mkt, dl]) => ({ r, cap, fc, com, res, mkt, dl, av: cap - com - res }));
+    const A = mk([
+      ["08:00–09:00", 20, 18, 14, 2, 6, 1], ["08:00–10:30", 50, 46, 38, 6, 15, 2], ["08:00–12:00", 80, 76, 60, 10, 24, 3], ["08:30–09:30", 20, 22, 16, 2, 6, 1],
+      ["09:00–10:00", 20, 17, 12, 2, 5, 1], ["09:00–11:30", 50, 52, 40, 6, 16, 2], ["10:00–11:00", 20, 19, 20, 0, 8, 1], ["10:00–12:00", 40, 36, 24, 5, 10, 2],
+      ["11:00–12:00", 20, 21, 17, 2, 7, 1], ["11:30–12:00", 10, 9, 10, 0, 4, 1]]);
+    const B = mk([["12:00–13:00", 100, 95, 90, 5, 36, 3], ["13:00–14:00", 100, 105, 70, 10, 28, 3], ["14:00–15:00", 40, 38, 32, 8, 12, 3], ["15:00–16:00", 80, 77, 60, 10, 24, 3]]);
+    const C = mk([["16:00–17:00", 60, 58, 36, 6, 14, 2], ["17:00–18:00", 60, 64, 44, 6, 18, 2], ["18:00–19:00", 40, 38, 22, 4, 8, 2]]);
+    return { shifts: [{ n: "Shift A", r: "08:00 – 12:00", pickers: 3, slots: A }, { n: "Shift B", r: "12:00 – 16:00", pickers: 4, slots: B }, { n: "Shift C", r: "16:00 – 19:00", pickers: 2, slots: C }], slots: A };
+  })(),
   split: { poolTotal: 600, poolUsed: 360, glovo: 190, wolt: 110, free: 180, own: 60, unused: 60, reservePct: 20, glovoLimit: 200, woltLimit: 150 },
   fte: [
     ["Mon 23 Nov", 3.0, 510], ["Tue 24 Nov", 3.0, 480], ["Wed 25 Nov", 3.0, 490], ["Thu 26 Nov", 3.0, 520],
@@ -65,3 +70,35 @@ window.DATA = {
   ],
   fteCapacityPerFte: 200
 };
+
+/* ------------------------------------------------------------------
+   PLACEHOLDER DATA (not from Figma): 250 generated stores, deterministic
+   (seeded PRNG), so pagination, search and filters have real counts.
+   The first 10 stores are the real Figma fixtures and are untouched.
+------------------------------------------------------------------- */
+(function (D) {
+  function rng(seed) { let a = seed >>> 0; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  D.rng = rng;
+  D.hash = function (s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const streets = ["Calea Dorobanților", "Bd. Decebal", "Șos. Olteniței", "Str. Lipscani", "Calea Griviței", "Bd. Basarab", "Șos. Berceni", "Str. Mihai Eminescu", "Bd. Regina Elisabeta", "Calea Călărași", "Șos. Virtuții", "Bd. Pache Protopopescu", "Str. Vitan", "Bd. Ion Mihalache", "Șos. Alexandriei", "Calea Moșilor", "Bd. Dacia", "Str. Fabrica de Glucoză", "Șos. Panduri", "Bd. Chișinău", "Str. Cernădești", "Bd. Mircea Vodă", "Șos. Giurgiului", "Str. Popa Savu", "Bd. Carol I", "Șos. Mihai Bravu", "Calea Plevnei", "Bd. Metalurgiei", "Str. Aviatorilor", "Bd. Timișoara"];
+  const fixtures = D.stores.map((s, i) => Object.assign({}, s, { id: i, region: s.sub.split(" · ")[0], kind: s.sub.split(" · ")[1] }));
+  const used = new Set(fixtures.map(s => s.name));
+  const R = rng(2611), out = fixtures.slice();
+  while (out.length < 260) {
+    const name = streets[Math.floor(R() * streets.length)] + " " + (1 + Math.floor(R() * 320));
+    if (used.has(name)) continue; used.add(name);
+    const sector = 1 + Math.floor(R() * 6), kind = R() < 0.38 ? "Hub" : "Store", roll = R();
+    const status = roll < 0.07 ? "CLOSED" : roll < 0.2 ? "IDLE" : "OPEN";
+    const s = { id: out.length, name, region: "Sector " + sector, kind, sub: "Sector " + sector + " · " + kind, status };
+    if (status === "CLOSED") { Object.assign(s, { fte: 0, cap: null, used: null, forecast: Math.round((200 + R() * 260) / 10) * 10, vs: null, prod: null, rev: null }); }
+    else {
+      const fte = Math.round((status === "IDLE" ? 1 + R() * 1.5 : 2 + R() * 4.5) * 2) / 2;
+      const cap = Math.max(100, Math.round(fte * (120 + R() * 40) / 10) * 10);
+      const u = status === "IDLE" ? 0.2 + R() * 0.2 : 0.5 + R() * 0.5;
+      const usedN = Math.min(cap, Math.round(cap * u)), vs = Math.round(R() * 60 - 30);
+      Object.assign(s, { fte, cap, used: usedN, vs, forecast: Math.round(cap * (1 + vs / 100)), prod: Math.round(58 + R() * 40), rev: String(Math.round(usedN * (55 + R() * 25) / 500) / 2) + "k" });
+    }
+    out.push(s);
+  }
+  D.all = out;
+})(window.DATA);
