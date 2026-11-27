@@ -22,7 +22,7 @@ window.DATA = {
   // priority: high | med | low. type keys match the filter pills. Actions: Reopen / Update / Manage / Review / Add picker
   alerts: [
     { p: "high", type: "closed", t: "Closed 7 h · limit 6 h", s: "Calea Floreasca 133 · Sector 1 · Hub", a: "Reopen" },
-    { p: "high", type: "fte", t: "Closed · FTE set to 0", s: "Șos. Colentina 410 · Sector 2 · Store", a: "Update" },
+    { p: "high", type: "fte", t: "Closed · FTE set to 0", s: "Șos. Colentina 410 · Sector 2 · Store", a: "Set pickers (FTE)" },
     { p: "med", type: "prod", t: "Prep 1.9 min/item, norm 1.2", s: "Bd. Timișoara 26 · Sector 6 · Hub", a: "Manage", restricted: true },
     { p: "med", type: "prepup", t: "Prep up 1.2 → 1.7 min/item in 2 h", s: "Șos. Mihai Bravu 20 · Sector 2 · Store", a: "Review" },
     { p: "med", type: "fill", t: "Capacity 100% full by 10:00", s: "Șos. Pipera 45 · Sector 2 · Hub", a: "Review" },
@@ -32,8 +32,8 @@ window.DATA = {
     { p: "med", type: "fc", t: "Forecast +29% vs capacity", s: "Șos. Pipera 45 · Sector 2 · Hub", a: "Review" },
     { p: "med", type: "fc", t: "Forecast +20% vs capacity", s: "Bd. Timișoara 26 · Sector 6 · Hub", a: "Review" },
     { p: "med", type: "fill", t: "Approaching capacity 98% · 12:00 – 13:00", s: "Bd. Timișoara 26 · Sector 6 · Hub", a: "Add picker" },
-    { p: "low", type: "idle", t: "Idle since 10:00, 67% unused", s: "Șos. Ștefan cel Mare 12 · Sector 2 · Store", a: "Update" },
-    { p: "low", type: "idle", t: "Idle since 10:30, 70% unused", s: "Calea Rahovei 266 · Sector 5 · Store", a: "Update" }
+    { p: "low", type: "idle", t: "Idle since 10:00, 67% unused", s: "Șos. Ștefan cel Mare 12 · Sector 2 · Store", a: "Set pickers (FTE)" },
+    { p: "low", type: "idle", t: "Idle since 10:30, 70% unused", s: "Calea Rahovei 266 · Sector 5 · Store", a: "Set pickers (FTE)" }
   ],
   alertTypes: [["all", "All"], ["closed", "Store closed"], ["fte", "FTE zero"], ["prod", "Slow preparation"], ["prepup", "Prep time rising"], ["fill", "Fast fill"], ["fc", "Forecast above capacity"], ["idle", "Idle capacity"]],
   // Notification settings rows: [label, value, unit, priority, description, shown]

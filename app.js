@@ -50,7 +50,7 @@
     app: { prot: String(D.account.protect), th: D.thresholds.map(t => String(t[1])), thp: D.thresholds.map(t => t[3]), shw: D.thresholds.map(t => t[5]), touched: false },
     st: null, setBase: null, storeSet: {}, ss: null, ssBase: null,
     rsOn: true, rsResume: "20", rsBase: null, resumed: false,
-    fteSaved: {}, shiftOv: {}, fte: null, fteBase: null, fteKey: null, keepSave: false
+    protMeta: "Wed 25 Nov by A. Popescu", hid: {}, cf: null, fteSaved: {}, shiftOv: {}, fte: null, fteBase: null, fteKey: null, keepSave: false
   };
   S.rsBase = JSON.stringify([S.rsOn, S.rsResume]);
 
@@ -97,7 +97,7 @@
   const SHIFTS = [{ n: "Shift A", r: "08:00 – 12:00", ch: "08:00–12:00", from: 0, to: 4 }, { n: "Shift B", r: "12:00 – 16:00", ch: "12:00–16:00", from: 4, to: 6 }];
   const IN_W = { "Same day": .6, "Fast delivery": .25, "Next day": .15 };
   const MK_W = { Wolt: .6, Bolt: .2, Glovo: .2 };
-  const PERIODS = D.days;
+  const PERIODS = ["Today (Thu 26 Nov)", "Tomorrow (Fri 27 Nov)", ...D.days.slice(2)];
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
   const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n);
   const range = r => r.replace("–", " – ");
@@ -120,10 +120,29 @@
     if (!st.cap) return "all";
     const sl = baseSlots(st), n = sl.filter(slotClosed).length; return n === sl.length ? "all" : n;
   };
-  const mkBadge = st => { const n = closedN(st); return n === "all" ? '<span class="badge sm b-red">Closed for all slots</span>' : n ? `<span class="badge sm b-orange">Closed for ${n} ${n === 1 ? "slot" : "slots"}</span>` : '<span class="badge sm b-green">Open</span>'; };
+  const tightest = st => Math.max(0, ...baseSlots(st).filter(x => x.cap).map(x => pct(x.cap - x.av, x.cap)));
+  const mkBadge = st => {
+    const n = closedN(st), tipC = `Protection threshold ${prot()}%. Closes marketplaces above ${mkLimit()}% full. Change in Settings`;
+    if (n === "all") return `<span class="badge sm b-red" title="${tipC}">Closed for all slots</span>`;
+    if (n) return `<span class="badge sm b-orange" title="${tipC}">Closed for ${n} ${n === 1 ? "slot" : "slots"}</span>`;
+    const tip = st.cap && pct(st.used, st.cap) > mkLimit() ? ` title="No slot above ${mkLimit()}% full. Tightest slot: ${tightest(st)}%"` : "";
+    return `<span class="badge sm b-green"${tip}>Open</span>`;
+  };
+  // Threshold guardrail: how many Delivery slots (today, all stores) change state if the threshold moves from -> to, using the same rule as slotClosed.
+  const closedAt = (s, th) => !s.cap || (s.cap - s.av) / s.cap * 100 > 100 - th;
+  function thImpact(from, to) {
+    let n = 0, m = 0;
+    Object.values(ALL).forEach(st => { if (!st.cap) return; const sl = baseSlots(st), a = sl.filter(x => closedAt(x, from)).length, b = sl.filter(x => closedAt(x, to)).length; if (a !== b) { n += Math.abs(b - a); m++; } });
+    return { n, m, close: to > from };
+  }
+  const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
+  const impactText = im => im.close ? `Would close ${plural(im.n, "more slot")} in ${plural(im.m, "store")}` : `Would reopen ${plural(im.n, "slot")} in ${plural(im.m, "store")}`;
+  const RES_TIP = "Orders held for a customer but not yet confirmed. They count as used capacity.";
+  const infoIc = `<button type="button" class="info" title="${RES_TIP}" aria-label="Reserved: ${RES_TIP}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>`;
   const slowPrep = () => +S.app.th[2];
   const TYPE_IDX = { closed: 0, fte: 1, prod: 2, prepup: 3, fill: 4, fc: 5, idle: 6 };
-  const activeAlerts = () => D.alerts.filter(a => !S.app.touched || S.app.shw[TYPE_IDX[a.type]]);
+  const akey = a => a.t + "|" + a.s;
+  const activeAlerts = () => D.alerts.filter(a => !S.hid[akey(a)] && (!S.app.touched || S.app.shw[TYPE_IDX[a.type]]));
 
   function alloc(tot, weights) {
     const sw = weights.reduce((a, b) => a + b, 0), raw = weights.map(w => w / sw * tot), base = raw.map(Math.floor); let rem = tot - base.reduce((a, b) => a + b, 0);
@@ -202,7 +221,7 @@
     let list = activeAlerts().filter(a => a.s.split(" · ")[0] === st.name).map(a => ({ p: a.p, t: a.t, s: a.p === "high" ? "High priority" : a.p === "med" ? "Medium priority" : "Low priority", a: a.a }));
     if (!list.length) {
       if (st.status === "CLOSED") list.push({ p: "high", t: "Closed · FTE set to 0", s: "High priority", a: "Reopen" });
-      if (st.status === "IDLE") list.push({ p: "low", t: "Idle capacity", s: "Low priority", a: "Update" });
+      if (st.status === "IDLE") list.push({ p: "low", t: "Idle capacity", s: "Low priority", a: "Set pickers (FTE)" });
       if (st.vs >= 15) list.push({ p: "med", t: "Forecast +" + st.vs + "% vs capacity", s: "Medium priority", a: "Review" });
       if (st.cap && pct(st.used, st.cap) >= 95) list.push({ p: "med", t: "Approaching capacity", s: "Medium priority", a: "Add picker" });
     }
@@ -219,6 +238,7 @@
   const matches = s => { const q = S.q.trim().toLowerCase(); return !q || s.name.toLowerCase().includes(q) || codeOf(s).toLowerCase() === q; };
 
   // ---------- shift FTE (edited per shift only; one value per shift per day, steps of 0.5, no maximum) ----------
+  const TODAY_I = 3; // Thu 26 Nov is today in the prototype; Mon-Wed are past, Fri is tomorrow
   const perFte = id => +((S.storeSet[id] || {}).perFte) || D.account.perFte;
   const baseShiftFte = (id, sh) => id === 2 ? D.timisoara.shiftFte[sh] : ALL[id].cap ? Math.round(ALL[id].fte) / 2 : 0;
   function shiftWeek(id, sh) {
@@ -264,6 +284,26 @@
     const c = document.getElementById("toasts"); if (!c) return;
     const d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "status"); d.textContent = msg; c.appendChild(d); setTimeout(() => d.remove(), 3500);
   }
+  function toastUndo(msg, label, fn) {
+    const c = document.getElementById("toasts"); if (!c) return;
+    const d = document.createElement("div"); d.className = "toast has-act"; d.setAttribute("role", "status");
+    const sp = document.createElement("span"); sp.textContent = msg; const b = document.createElement("button"); b.type = "button"; b.className = "toast-act"; b.textContent = label;
+    b.addEventListener("click", () => { fn(); d.remove(); }); d.append(sp, b); c.appendChild(d); setTimeout(() => d.remove(), 8000);
+  }
+  // Confirm modal (alertdialog) with its own focus trap; focus returns to the opener
+  let modalOpener = null, modalCfg = null;
+  const $modal = document.createElement("div"); $modal.id = "modal-root"; document.body.appendChild($modal);
+  function openModal(cfg) {
+    modalCfg = cfg; modalOpener = document.activeElement;
+    $modal.innerHTML = `<div class="modal-scrim"></div><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="m-t" aria-describedby="m-d" tabindex="-1"><h2 id="m-t">${cfg.title}</h2><p id="m-d">${cfg.body}</p><div class="m-actions"><button type="button" class="btn" data-m="cancel">Cancel</button><button type="button" class="btn filled" data-m="apply">${cfg.ok}</button></div></div>`;
+    $modal.querySelector('[data-m="cancel"]').focus();
+  }
+  function closeModal(apply) {
+    const cfg = modalCfg; modalCfg = null; $modal.innerHTML = "";
+    if (apply && cfg) cfg.onOk(); else if (modalOpener && document.contains(modalOpener)) { try { modalOpener.focus(); } catch (e) {} }
+    modalOpener = null;
+  }
+  $modal.addEventListener("click", ev => { const b = ev.target.closest("[data-m]"); if (b) closeModal(b.dataset.m === "apply"); else if (ev.target.classList.contains("modal-scrim")) closeModal(false); });
   const ph = `<div class="ph-note" role="note">Placeholder content. This page is not designed in Figma yet.</div>`;
   const settingsBtn = () => `<button class="settings-btn" data-act="settings">${I.gear}<span>Settings</span></button>`;
 
@@ -292,9 +332,14 @@
 
   // ---------- attention card ----------
   const idByName = n => ALL.findIndex(s => s.name === n);
-  function alertBtn(a, id) { return `<button class="act" data-act="alert" data-a="${a.a}" data-id="${id}">${a.a}</button>`; }
+  const CONFIRM = { "Reopen": ["Reopen", "Reopen"], "Set pickers (FTE)": ["Set pickers (FTE) for", "Set pickers (FTE)"] };
+  function alertBtn(a, id, key) {
+    const c = CONFIRM[a.a], nm = ALL[id] ? ALL[id].name : "";
+    if (c && key && S.cf === key) return `<span class="cf" role="group" aria-label="Confirm ${a.a}"><span class="cf-q">${c[0]} ${nm}?</span><button type="button" class="btn sm" data-act="cf-no" data-key="${key}">Cancel</button><button type="button" class="btn filled sm" data-act="cf-yes" data-a="${a.a}" data-id="${id}">${c[1]}</button></span>`;
+    return `<button class="act" data-act="alert" data-a="${a.a}" data-id="${id}" ${key ? `data-key="${key}"` : ""}>${a.a}</button>`;
+  }
   function attention(list, open, count, ctxId) {
-    const body = !open ? "" : count === 0 ? `<p class="empty">No notifications right now</p>` : `<div class="att-list">${list.slice(0, 3).map(a0 => { const a = a0.a === "Manage" ? Object.assign({}, a0, { a: "Review" }) : a0; return `<div class="alert-row"><span class="ico ${a.p}">${prioIcon[a.p]}</span><div class="txt"><b>${a.t}</b><span>${ctxId !== undefined ? a.s : a.s.split(" · ")[0]}</span></div>${alertBtn(a, ctxId !== undefined ? ctxId : idByName(a.s.split(" · ")[0]))}</div>`; }).join("")}</div>`;
+    const body = !open ? "" : count === 0 ? `<p class="empty">No notifications right now</p>` : `<div class="att-list">${list.slice(0, 3).map(a0 => { const a = a0.a === "Manage" ? Object.assign({}, a0, { a: "Review" }) : a0; return `<div class="alert-row"><span class="ico ${a.p}">${prioIcon[a.p]}</span><div class="txt"><b>${a.t}</b><span>${ctxId !== undefined ? a.s : a.s.split(" · ")[0]}</span></div>${alertBtn(a, ctxId !== undefined ? ctxId : idByName(a.s.split(" · ")[0]), "c" + a.t + "|" + a.s)}</div>`; }).join("")}</div>`;
     return `<section class="card" aria-labelledby="att-h"><div class="att-head"><button class="toggle" data-act="att-toggle" aria-expanded="${open}">${open ? I.down : I.right}<h5 id="att-h">Needs attention</h5><span class="count">${count}</span></button>${count >= 3 ? '<button class="link" data-act="alerts">View all</button>' : ""}</div>${body}</section>`;
   }
 
@@ -381,12 +426,12 @@
     let rows = "";
     SHIFTS.forEach((g, si) => {
       const open = S.so[g.n] !== false, fv = shiftToday(id, si);
-      rows += `<tr class="band"><td colspan="6"><button class="shift-t" data-act="sgrp" data-s="${g.n}" aria-expanded="${open}" aria-label="${g.n}, ${g.r}">${open ? I.down : I.right}<span><span class="sn">${g.n}</span><span class="sub">${g.r}</span></span></button></td><td class="fcell"><span class="fv">${f1(fv)}</span><button class="upd" data-act="update-shift" data-s="${si}" aria-label="Update FTE for ${g.n}">Update</button></td></tr>`;
+      rows += `<tr class="band"><td colspan="6"><button class="shift-t" data-act="sgrp" data-s="${g.n}" aria-expanded="${open}" aria-label="${g.n}, ${g.r}">${open ? I.down : I.right}<span><span class="sn">${g.n}</span><span class="sub">${g.r}</span></span></button></td><td class="fcell"><span class="fv">${f1(fv)}</span><button class="upd" data-act="update-shift" data-s="${si}" aria-label="Set pickers (FTE) for ${g.n}">Set pickers (FTE)</button></td></tr>`;
       if (open) rows += m.slots.map((s, i) => [s, i]).slice(g.from, g.to).map(([s, i]) => slotRow(s, i)).join("");
     });
     const mkRow = variant === "a" ? `<div class="mk-row"><span class="mk-l">Marketplaces</span><span class="mk-i"><b>Glovo</b><span class="badge b-green">Open</span></span><span class="mk-i"><b>Wolt</b><span class="badge b-orange">Partial</span></span><span class="mk-i"><b>Bolt</b><span class="badge b-red">Closed</span></span></div>` : "";
     return `<section class="card sd" aria-labelledby="tb-h">${svcHead(m)}${mkRow}
-      <div class="tscroll"><table class="t-slots"><colgroup><col style="width:14.11%"><col style="width:15.12%"><col style="width:13.11%"><col style="width:14.11%"><col style="width:22.18%"><col style="width:12.1%"><col style="width:9.27%"></colgroup><thead><tr><th>Time slot</th><th>Committed orders</th><th>Reserved orders</th><th>Available orders</th><th>Capacity use</th><th>Marketplace(s)</th><th class="r">FTE</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+      <div class="tscroll"><table class="t-slots"><colgroup><col style="width:14.11%"><col style="width:13.62%"><col style="width:14.61%"><col style="width:14.11%"><col style="width:17.45%"><col style="width:12.1%"><col style="width:13.99%"></colgroup><thead><tr><th>Time slot</th><th>Committed orders</th><th><span class="th-in">Reserved orders${infoIc}</span></th><th>Available orders</th><th>Capacity use</th><th>Marketplace(s)</th><th class="r">FTE</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
   }
   const mkStatusCard = m => `<section class="card" aria-labelledby="ms-h"><h5 id="ms-h" class="ms-t">Marketplace status · ${m.st.name}</h5><div class="ms-grid">${[["Glovo", "Open", "green", 3], ["Wolt", "Partial", "orange", 3], ["Bolt", "Closed", "red", 0]].map(([n, l, c, k]) => `<div class="ms-c"><div><b>${n}</b> <span class="badge b-${c}">${l}</span></div><span class="sub">${k} of 6 slots open</span></div>`).join("")}</div></section>`;
   function storeDetail(P) {
@@ -444,21 +489,25 @@
 
   // ---------- drawers ----------
   const drawerShell = (title, body, footer, label, extraHeader) => `<div class="scrim" data-act="close"></div><aside class="drawer" tabindex="-1" role="dialog" aria-modal="true" aria-label="${label || title}"><header><h2>${title}</h2><span style="display:flex;gap:8px;align-items:center">${extraHeader || ""}<button class="xbtn" data-act="close" aria-label="Close">${I.x}</button></span></header>${body}${footer || ""}</aside>`;
-  const savedAlert = (title, msg) => `<div class="alert-box green saved" role="status"><svg class="al-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><div><b>${title}</b><p>${msg}</p></div></div>`;
+  const savedAlert = (title, msg, extra) => `<div class="alert-box green saved" role="status"><svg class="al-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><div><b>${title}</b><p>${msg}</p>${extra || ""}</div></div>`;
 
-  // Notifications drawer ("Needs attention") with the Notification settings button
+  // Notifications drawer ("Needs attention") with a Settings button (opens Notification settings)
   function alertsDrawer() {
     const act = activeAlerts(), list = act.filter(a => S.alertFilter === "all" || a.type === S.alertFilter);
+    const groups = []; list.forEach(a => { const n = a.s.split(" · ")[0]; let g = groups.find(x => x.n === n); if (!g) groups.push(g = { n, items: [] }); g.items.push(a); });
+    const PL = { high: "High priority", med: "Medium priority", low: "Low priority" };
+    const item = a => { const id = idByName(a.s.split(" · ")[0]), key = "d" + akey(a), ix = D.alerts.indexOf(a);
+      return `<div class="alert-row ${a.restricted ? "rs" : ""}"><span class="ico ${a.p}">${prioIcon[a.p]}</span><div class="txt"><b>${a.t}</b><span>${PL[a.p]}</span>${a.restricted ? '<span class="restricted">Marketplace orders restricted</span>' : ""}</div>${alertBtn(a, id, key)}<div class="ar-acts"><button type="button" class="link sm" data-act="snooze" data-i="${ix}">Snooze 1 h</button><button type="button" class="link sm" data-act="dismiss" data-i="${ix}">Dismiss</button></div></div>`; };
     return drawerShell(`Needs attention (${act.length})`, `<div class="body"><div class="pills" role="group" aria-label="Notification type">${D.alertTypes.map(([k, l]) => `<button class="pill ${S.alertFilter === k ? "on" : ""}" aria-pressed="${S.alertFilter === k}" data-act="afilter" data-k="${k}">${S.alertFilter === k ? svg('<path d="m5 12 5 5 9-10"/>', 14, 2.5) : ""}${l}</button>`).join("")}</div>
-      ${list.map(a => `<div class="alert-row ${a.restricted ? "rs" : ""}"><span class="ico ${a.p}">${prioIcon[a.p]}</span><div class="txt"><b>${a.t}</b><span>${a.s}</span></div>${a.restricted ? '<span class="restricted">RESTRICTED</span>' : ""}${alertBtn(a, idByName(a.s.split(" · ")[0]))}</div>`).join("") || '<p class="empty">No notifications of this type</p>'}</div>`,
-      "", "Needs attention", `<button class="btn outline sm" data-act="notif-settings">Notification settings</button>`);
+      ${groups.map(g => `<section class="ag" aria-label="${g.n}"><h3 class="ag-h">${g.n} <span class="count">${g.items.length}</span></h3>${g.items.map(item).join("")}</section>`).join("") || '<p class="empty">No notifications of this type</p>'}</div>`,
+      "", "Needs attention", `<button class="settings-btn ns-btn" data-act="notif-settings">${I.gear}<span>Settings</span></button>`);
   }
 
   // Settings side panel: Account settings (Capacity + Notifications), Notification settings (Notifications only), Store settings
   const thErr = (v, i) => { const u = D.thresholds[i][2]; return badNum(v) || (u === "min/item" ? +String(v).replace(",", ".") > 10 : (!/^\d+$/.test(String(v).trim()) || +v > 1000)); };
   const protBad = v => !/^\d+$/.test(String(v).trim()) || +v > 100;
   function notifSection(st) {
-    return `<h6 class="sec">Notifications</h6><p class="desc" style="margin-bottom:16px">Manage active notifications, trigger thresholds and priority levels.</p>
+    return `<h6 class="sec">Notifications</h6><p class="desc" style="margin-bottom:4px">Manage active notifications, trigger thresholds and priority levels.</p><p class="desc" style="margin-bottom:16px">Applies to all your stores.</p>
       <div class="th-row th-h"><span>Notification type</span><span>Threshold</span><span>Priority</span><span class="r">Show</span></div>
       ${D.thresholds.map((t, i) => { const off = !st.shw[i], bad = !off && thErr(st.th[i], i);
         return `<div class="th-row ${off ? "off" : ""}"><div><span class="lbl">${t[0]}</span><span class="sub">${t[4]}</span>${t[0] === "Slow preparation" ? '<button class="link strong" data-act="restrict">Restrict orders</button>' : ""}</div><span class="ctl"><input ${numAttr("th:" + i, st.th[i], bad, t[0] + " threshold, " + t[2])} ${t[2] === "min/item" ? 'data-step=".1"' : ""} ${off ? "disabled" : ""}>${bad ? `<span class="err-msg" id="err-th-${i}">${t[2] === "min/item" ? "Enter up to 10" : "Whole number"}</span>` : ""}</span><select class="select" data-k="thp:${i}" aria-label="${t[0]} priority" ${off ? "disabled" : ""}>${["High", "Medium", "Low"].map(p => `<option ${st.thp[i] === p ? "selected" : ""}>${p}</option>`).join("")}</select><button class="switch" role="switch" aria-checked="${!off}" aria-label="Show ${t[0]} notifications" data-act="th-show" data-i="${i}"></button></div>`; }).join("")}`;
@@ -466,7 +515,9 @@
   function settingsDrawer(P) {
     const st = S.st, acc = P.drawer === "account", dirty = JSON.stringify(st) !== S.setBase;
     const bad = protBad(st.prot) || st.th.some((v, i) => st.shw[i] && thErr(v, i));
-    const cap = acc ? `<h6 class="sec first">Capacity</h6><div class="cap-row"><div id="pt-l"><span class="lbl">Own-channel protection threshold, %</span><span class="sub">Marketplaces close when less than this share of capacity is left. Applies to all stores and slots</span></div><span class="ctl"><input ${numAttr("prot", st.prot, protBad(st.prot), "Own-channel protection threshold, %")} aria-describedby="pt-l">${protBad(st.prot) ? '<span class="err-msg">Enter 0–100</span>' : ""}</span></div>` : "";
+    const pBad = protBad(st.prot), pChanged = !pBad && +st.prot !== +S.app.prot;
+    const live = pChanged ? impactText(thImpact(+S.app.prot, +st.prot)) : "";
+    const cap = acc ? `<h6 class="sec first">Capacity</h6><div class="cap-row pt"><div id="pt-l"><span class="lbl">Own-channel protection threshold, %</span><span class="sub">Marketplaces close when less than this share of capacity is left. Applies to all stores and slots</span></div><span class="ctl"><input ${numAttr("prot", st.prot, pBad, "Own-channel protection threshold, %")} aria-describedby="pt-l pt-meta">${pBad ? '<span class="err-msg">Enter 0–100</span>' : ""}</span></div><div class="pt-meta" id="pt-meta"><span class="pt-last">Last changed ${S.protMeta}</span><span class="pt-live" role="status" aria-live="polite">${live}</span></div>` : "";
     return drawerShell(acc ? "Account settings" : "Notification settings", `<div class="body set-body">${cap}${notifSection(st)}</div>`,
       `<footer class="actions"><button class="btn" data-act="close">Cancel</button><button class="btn filled" data-act="save-settings" ${dirty && !bad ? "" : "disabled"}>Save changes</button></footer>`);
   }
@@ -497,11 +548,16 @@
   function fteDrawer(P) {
     const sh = SHIFTS[P.shift], week = shiftWeek(P.id, P.shift), K = perFte(P.id), saved = P.fstate === "saved";
     const ok = S.fte.map(validFte), invalid = ok.some(x => !x), dirty = JSON.stringify(S.fte) !== S.fteBase;
-    const rows = D.week.map((d, i) => { const v = ok[i] ? numOf(S.fte[i]) : null, cap = v === null ? null : Math.round(v * K), fc = week[i].fc;
-      return `<div class="fte-row"><span class="day">${d}</span><span><input ${numAttr("fte:" + i, S.fte[i], !ok[i], "FTE on " + d)} data-step=".5">${ok[i] ? "" : `<span class="err-msg" id="err-fte-${i}">Steps of 0.5</span>`}</span><span>${cap === null ? "—" : cap}</span><span>${fc} · ${cap ? pct(fc, cap) + "%" : "—"}</span></div>`; }).join("");
-    return drawerShell("Set FTE", `${saved ? savedAlert("Changes saved", "FTE updated. Capacity recalculated.") : ""}<div class="body"><h3 class="sft">${sh.n} · ${sh.ch}</h3>
-      <p class="desc">Enter FTE for this shift for the week Mon 23 – Sun 29 Nov. Estimated capacity is ${K} orders per FTE.</p>
-      <div class="fte-row fte-h"><span>Day</span><span>FTE</span><span>Est. capacity</span><span>Forecast · load</span></div>${rows}</div>`,
+    const over = [];
+    const rows = D.week.map((d, i) => { const v = ok[i] ? numOf(S.fte[i]) : null, cap = v === null ? null : Math.round(v * K), fc = week[i].fc, ob = cap !== null && fc > cap && i >= TODAY_I;
+      if (ob && i >= TODAY_I) over.push({ d, n: fc - cap });
+      const past = i < TODAY_I, tom = i === TODAY_I + 1;
+      return `<div class="fte-row ${ob ? "over" : ""} ${past ? "past" : ""} ${tom ? "tom" : ""}"><span class="day">${d}${tom ? '<span class="tag-tom">Tomorrow</span>' : ""}</span><span><input ${numAttr("fte:" + i, S.fte[i], !ok[i], "FTE on " + d)} ${past ? "disabled" : ""} data-step=".5">${ok[i] ? "" : `<span class="err-msg" id="err-fte-${i}">Steps of 0.5</span>`}</span><span class="calc">${cap === null ? "—" : `${v} FTE × ${K} = <b>${cap}</b>`}</span><span class="load">${ob ? '<span class="ov-ic" role="img" aria-label="Overbooked">!</span>' : ""}${fc} · ${cap ? pct(fc, cap) + "%" : "—"}</span></div>`; }).join("");
+    const overAlert = over.length && !saved ? `<div class="fte-over" role="status" aria-live="polite"><span class="ov-ic" aria-hidden="true">!</span><div>${over.map(o => `<p>Overbooked on ${o.d} by ${o.n} orders. Marketplaces will close earlier on this day.</p>`).join("")}</div></div>` : "";
+    const still = over.length ? `<div class="still-over">${over.map(o => `<p><span class="ov-ic" aria-hidden="true">!</span>Still overbooked on ${o.d} by ${o.n} orders.</p>`).join("")}</div>` : "";
+    return drawerShell("Set pickers (FTE)", `${saved ? savedAlert("Changes saved", "FTE updated. Capacity recalculated.", still) : ""}<div class="body"><h3 class="sft">${sh.n} · ${sh.ch}</h3>
+      <p class="desc">Estimated capacity = FTE × ${K} orders per FTE. Slot capacity in the store view is planned per slot and can differ.</p>
+      <div class="fte-row fte-h"><span>Day</span><span>FTE</span><span>Est. capacity</span><span>Forecast · load</span></div>${rows}${overAlert}</div>`,
       `<footer class="actions"><button class="btn" data-act="close">${saved ? "Close" : "Cancel"}</button><button class="btn filled" data-act="save-fte" ${dirty && !invalid ? "" : "disabled"}>Save changes</button></footer>`);
   }
 
@@ -516,9 +572,9 @@
     const util = pct(s.cap - s.av, s.cap);
     const group = (color, label, o) => `<h6 class="ts-grp"><i style="background:${color}"></i>${label} (${total(o)})</h6>${Object.entries(o).map(([n, v]) => `<div class="ts-row"><span>${n}</span><b>${v}</b></div>`).join("") || '<div class="ts-row"><span>No orders</span><b>0</b></div>'}`;
     let body;
-    if (S.tab === "Capacity") body = `${!collect && s.cap > 0 && slotClosed(s) ? `<div class="ts-alert" role="status"><svg class="al-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.01"/></svg><div><b>Marketplaces closed for this time slot</b><p>Capacity use is above the protection threshold. New marketplace orders are blocked for this time slot; the remaining capacity is kept for your own channel.</p></div></div>` : ""}<div class="ts-sum"><div class="ts-head"><b>${s.cap ? util + "%" : "—"}</b><span>Capacity use</span></div>
+    if (S.tab === "Capacity") body = `${!collect && s.cap > 0 && slotClosed(s) ? `<div class="ts-alert" role="status"><svg class="al-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.01"/></svg><div><b>Marketplaces closed for this time slot</b><p>Closed at ${mkLimit()}% full, now ${util}%. ${s.av} left for your own channel.</p><button type="button" class="link sm" data-act="account-settings">Protection threshold ${prot()}%</button></div></div>` : ""}<div class="ts-sum"><div class="ts-head"><b>${s.cap ? util + "%" : "—"}</b><span>Capacity use</span></div>
         <div class="ts-bar" role="img" aria-label="Committed ${s.com}, reserved ${s.res}, available ${s.av} of ${s.cap} orders">${(() => { let left = 100; return [["com", s.com], ["res", s.res], ["av", s.av]].map(([c, v]) => { const w = s.cap > 0 ? Math.max(0, Math.min(left, v / s.cap * 100)) : 0; left -= w; return w > 0 ? `<i class="sq ${c}" style="width:${w.toFixed(3)}%"></i>` : ""; }).join(""); })()}</div>
-        <div class="ts-leg">${[["sq tot", "Total capacity", s.cap], ["sq com", "Committed", s.com], ["sq res", "Reserved", s.res], ["sq av", "Available", s.av], ["sq fc", "Forecast", s.fc]].map(([c, l, v]) => `<div><i class="${c}"></i><span>${l}</span><b>${v} orders</b></div>`).join("")}</div></div>
+        <div class="ts-leg">${[["sq tot", "Total capacity", s.cap], ["sq com", "Committed", s.com], ["sq res", "Reserved" + "\u0001", s.res], ["sq av", "Available", s.av], ["sq fc", "Forecast", s.fc]].map(([c, l, v]) => `<div><i class="${c}"></i><span>${l.replace("\u0001", "")}${l.includes("\u0001") ? infoIc : ""}</span><b>${v} orders</b></div>`).join("")}</div></div>
       <div class="ts-card"><h6>Committed by type</h6>${s.com ? `<div class="ts-split" role="img" aria-label="Internal ${collect ? 100 : ip} percent"><span style="width:${collect ? 100 : ip}%;background:var(--internal)">${collect ? 100 : ip}%</span>${mp ? `<span style="width:${mp}%;background:#c65200">${mp}%</span>` : ""}</div>` : '<p class="sub" style="margin:8px 0">No committed orders in this time slot</p>'}
         ${s.com ? group("var(--internal)", collect ? "Collect orders" : "Internal orders", s.internal) + (collect ? "" : group("#c65200", "Marketplace orders", s.market)) : ""}</div>`;
     else if (S.tab === "Resources") {
@@ -594,6 +650,7 @@
     root.innerHTML = drawerFor(curP);
     if (k) { const n = root.querySelector(`[data-k="${k}"]`); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } }
   }
+  const refreshView = () => { if (document.querySelector(".drawer")) renderDrawer(); else render(); };
   const resetErrRoute = (from, to) => { if (route() === from) { history.replaceState(null, "", "#/" + to); lastRoute = to; curP = parse(to); } };
 
   // ---------- events ----------
@@ -606,7 +663,7 @@
     }
     if (a === "Manage") { push(); go("r21/restriction"); return; }
     if (id < 0 || isNaN(id)) { toast("Store not found"); return; }
-    if (a === "Update") { push(); go(fteRoute(id, 0)); return; }
+    if (a === "Set pickers (FTE)") { push(); go(fteRoute(id, 0)); return; }
     go(storeRoute(id, "expanded"));
   }
   document.addEventListener("click", ev => {
@@ -631,12 +688,24 @@
         break;
       case "alerts": push(); go("r19/alerts-drawer"); break;
       case "notif-settings": push(); go("r20/thresholds"); break;
+      case "account-settings": push(); go("r55/account-settings"); break;
       case "settings": push(); go(P.page === "store" ? settingsRoute(P.id) : "r55/account-settings"); break;
       case "restrict": push(); go("r21/restriction"); break;
       case "sort": { const k = t.dataset.k; if (S.sort.k !== k) S.sort = { k, d: "asc" }; else if (S.sort.d === "asc") S.sort.d = "desc"; else S.sort = { k: null, d: null }; S.page = 1; render(); break; }
       case "page": S.page = +t.dataset.n; render(); break;
       case "store": go(storeRoute(+t.dataset.id, "collapsed")); break;
-      case "alert": alertAction(t.dataset.a, +t.dataset.id); break;
+      case "alert": {
+        const a = t.dataset.a, key = t.dataset.key;
+        if (CONFIRM[a] && key) { S.cf = key; refreshView(); const n = document.querySelector('[data-act="cf-no"]'); if (n) n.focus(); break; }
+        alertAction(a, +t.dataset.id); break;
+      }
+      case "cf-no": { const key = S.cf; S.cf = null; refreshView(); const b = [...document.querySelectorAll('[data-act="alert"]')].find(x => x.dataset.key === key); if (b) b.focus(); break; }
+      case "cf-yes": S.cf = null; alertAction(t.dataset.a, +t.dataset.id); break;
+      case "snooze": case "dismiss": {
+        const al = D.alerts[+t.dataset.i], k = akey(al), snz = a === "snooze"; S.hid[k] = snz ? "snoozed" : "dismissed"; S.cf = null; render();
+        toastUndo(snz ? "Snoozed for 1 h" : "Notification dismissed", "Undo", () => { delete S.hid[k]; render(); });
+        break;
+      }
       case "ofilter": S.ordFilter = t.dataset.k; render(); break;
       case "svc": S.service = t.dataset.v; render(); break;
       case "show-closed": S.mkOnly = !S.mkOnly; S.page = 1; render(); break;
@@ -649,7 +718,17 @@
       case "rs-toggle": S.rsOn = !S.rsOn; renderDrawer(); break;
       case "resume-now": S.resumed = true; renderDrawer(); break;
       case "th-show": { const i = +t.dataset.i; S.st.shw[i] = !S.st.shw[i]; renderDrawer(); break; }
-      case "save-settings": S.app = { prot: S.st.prot.trim(), th: S.st.th.slice(), thp: S.st.thp.slice(), shw: S.st.shw.slice(), touched: JSON.stringify(S.st.shw) !== JSON.stringify(D.thresholds.map(t => t[5])) }; toast("Changes saved"); go(closeTarget(P)); break;
+      case "save-settings": {
+        const nw = { prot: S.st.prot.trim(), th: S.st.th.slice(), thp: S.st.thp.slice(), shw: S.st.shw.slice(), touched: JSON.stringify(S.st.shw) !== JSON.stringify(D.thresholds.map(t => t[5])) };
+        const from = +S.app.prot, to = +nw.prot, target = closeTarget(P);
+        if (from === to) { S.app = nw; toast("Changes saved"); go(target); break; }
+        const im = thImpact(from, to), body = `${plural(im.n, "slot")} in ${plural(im.m, "store")} will ${im.close ? "close" : "reopen"} for marketplaces. This applies to all your stores.`;
+        openModal({ title: `Change protection threshold from ${from}% to ${to}%?`, body, ok: "Apply to all stores", onOk: () => {
+          const prevMeta = S.protMeta, prevProt = S.app.prot; S.app = nw; S.protMeta = "today by you"; go(target);
+          toastUndo(`Threshold changed from ${from}% to ${to}%`, "Undo", () => { S.app = Object.assign({}, S.app, { prot: prevProt }); S.protMeta = prevMeta; render(); });
+        } });
+        break;
+      }
       case "save-store-settings": S.storeSet[P.id] = { perFte: S.ss.perFte.trim(), norm: S.ss.norm.trim() }; toast("Changes saved"); go(closeTarget(P)); break;
       case "save-rs": S.rsBase = JSON.stringify([S.rsOn, S.rsResume]); renderDrawer(); break;
       case "save-fte": {
@@ -740,6 +819,12 @@
       go("r19/default");
     } });
   document.addEventListener("keydown", ev => {
+    if (modalCfg) {
+      if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); closeModal(false); return; }
+      if (ev.key === "Tab") { const f = [...$modal.querySelectorAll("button")], first = f[0], last = f[f.length - 1], a = document.activeElement;
+        if (!$modal.contains(a)) { first.focus(); ev.preventDefault(); } else if (ev.shiftKey && a === first) { last.focus(); ev.preventDefault(); } else if (!ev.shiftKey && a === last) { first.focus(); ev.preventDefault(); } }
+      return;
+    }
     if (ev.key === "Escape") {
       if (S.mobileMenu) { S.mobileMenu = false; render(); document.querySelector("[data-act=menu-open]")?.focus(); return; }
       if (S.protoOpen) { S.protoOpen = false; render(); return; }

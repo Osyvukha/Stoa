@@ -763,3 +763,51 @@ table.t-slots { min-width: 992px; }
 table.st2 th { white-space: normal; line-height: 18px; }
 table.stores.st2 thead th { padding-top: 16px; padding-bottom: 16px; }
 table.stores.st2.has-mk thead th { height: 70px; }
+
+/* Notifications drawer: "Settings" (opens Notification settings) uses the top-bar Settings button style (Figma 865:13500) */
+.drawer .settings-btn.ns-btn { margin-right: 0; padding: 0 12px; height: 36px; white-space: nowrap; }
+.drawer .settings-btn.ns-btn { width: 119px; justify-content: center; box-sizing: border-box; }
+
+/* Set FTE: overbooked rows, capacity arithmetic */
+.fte-row { grid-template-columns: 88px 100px 1fr 112px; }
+.fte-row .calc { font-size: 14px; line-height: 20px; color: var(--text); } .fte-row .calc b { font-weight: 600; }
+.fte-row .load { display: inline-flex; align-items: center; gap: 6px; }
+.fte-row.over { background: #fff1ee; } .fte-row.over .load, .fte-row.over .load { color: var(--red-fg); font-weight: 600; }
+.ov-ic { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 16px; height: 16px; border-radius: 50%; background: #c92a2a; color: #fff; font-size: 11px; font-weight: 700; line-height: 1; }
+.fte-over { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 12px 16px; border-radius: 8px; background: var(--red-bg); color: var(--red-fg); font-size: 14px; line-height: 20px; }
+.fte-over .ov-ic { margin-top: 2px; } .fte-over p, .still-over p { margin: 0; } .fte-over p + p { margin-top: 4px; }
+.still-over { margin-top: 8px; } .still-over p { display: flex; gap: 8px; align-items: flex-start; color: var(--red-fg); font-weight: 600; font-size: 14px; line-height: 20px; margin-top: 4px; } .still-over .ov-ic { margin-top: 2px; }
+@media (max-width: 900px) { .fte-row { grid-template-columns: 76px 88px 1fr 88px; padding: 0 8px; } .fte-row .calc { font-size: 13px; } .fte-row .load { font-size: 13px; gap: 4px; } }
+/* Threshold guardrail */
+.cap-row.pt { border-bottom: 0; padding-bottom: 8px; }
+.pt-meta { display: grid; gap: 4px; padding: 0 0 16px; border-bottom: 1px solid #e8ebed; font-size: 12px; line-height: 18px; }
+.pt-last { color: var(--dimmed); } .pt-live { color: var(--text); font-weight: 600; } .pt-live:empty { display: none; }
+/* Confirm modal + toast action */
+.modal-scrim { position: fixed; inset: 0; background: rgba(17, 24, 28, .5); z-index: 70; }
+.modal { position: fixed; z-index: 71; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 440px; max-width: calc(100vw - 32px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 12px 40px rgba(0,0,0,.3); outline: none; }
+.modal h2 { margin: 0 0 12px; font-size: 18px; line-height: 26px; font-weight: 600; } .modal p { margin: 0 0 24px; font-size: 14px; line-height: 20px; color: var(--text); }
+.modal .m-actions { display: flex; justify-content: flex-end; gap: 12px; }
+.toast.has-act { display: flex; align-items: center; gap: 16px; } .toast-act { background: none; border: 0; color: #8ce99a; font-weight: 600; font-size: 14px; cursor: pointer; padding: 4px 8px; margin: -4px -8px -4px 0; border-radius: 4px; } .toast-act:hover { text-decoration: underline; }
+
+/* Notifications drawer: grouped by store, inline confirm, snooze / dismiss */
+.ag { margin-top: 16px; } .ag-h { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 14px; line-height: 20px; font-weight: 600; } .ag-h .count { font-size: 12px; background: var(--badge-neutral-bg); color: var(--badge-neutral-fg); border-radius: 10px; padding: 0 8px; line-height: 20px; }
+.drawer .alert-row { flex-wrap: wrap; row-gap: 4px; } .drawer .alert-row .txt { flex: 1 1 160px; }
+.drawer .alert-row.rs .txt { flex: 1 1 160px; }
+.ar-acts { flex-basis: 100%; display: flex; gap: 16px; padding-left: 44px; }
+.link.sm { font-size: 12px; line-height: 18px; padding: 0; background: none; border: 0; color: var(--brand); font-weight: 600; cursor: pointer; } .link.sm:hover { text-decoration: underline; }
+.restricted { display: inline-block; margin: 4px 0 0 !important; background: var(--orange-bg) !important; color: #8a3700 !important; border: 1px solid #f0c36d; border-radius: 12px; padding: 0 10px !important; font-weight: 600; font-size: 12px !important; line-height: 18px !important; letter-spacing: 0; text-transform: none; }
+.alert-row .txt .restricted { display: inline-block; }
+.cf { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; justify-content: flex-end; } .cf-q { font-size: 12px; font-weight: 600; } .btn.sm { height: 28px; padding: 0 12px; font-size: 12px; }
+/* info icon, Set FTE past / tomorrow, closed-slot alert link */
+.info { display: inline-flex; vertical-align: middle; margin-left: 4px; padding: 0; background: none; border: 0; color: var(--dimmed); cursor: help; border-radius: 50%; } .info:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.th-in { display: inline-flex; align-items: center; white-space: nowrap; }
+.ts-leg .info { margin-left: 6px; }
+.fte-row.past { color: #868e96; background: #f8f9fa; } .fte-row.past .input { background: #f1f3f5; color: #868e96; } .fte-row.past .calc, .fte-row.past .load { color: #868e96; }
+.fte-row.tom { background: #eef7f6; } .tag-tom { display: inline-block; margin-left: 8px; padding: 0 8px; border-radius: 10px; background: #d5f1ee; color: var(--brand); font-size: 11px; font-weight: 600; line-height: 18px; vertical-align: middle; }
+.fte-row.over.tom { background: #fff1ee; }
+.ts-alert .link.sm { margin-top: 4px; display: inline-block; }
+.upd { white-space: nowrap; }
+.pt-meta .pt-last { color: var(--dimmed); }
+.ag-h { color: var(--text); }
+.att-list .act { max-width: 92px; white-space: normal; text-align: right; line-height: 16px; }
+.att-list .act { max-width: 100px; padding: 0 8px; }

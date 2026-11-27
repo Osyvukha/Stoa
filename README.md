@@ -2,6 +2,14 @@
 
 Static HTML, CSS and JS. No build step, no dependencies. Synced with Figma page "Stoa - Draft 4 11.26.2026" on 2026-11-26.
 
+**Guardrails and wording added in the latest round**
+- Set pickers (FTE) drawer: description "Estimated capacity = FTE × 200 orders per FTE. Slot capacity in the store view is planned per slot and can differ." Est. capacity shows the arithmetic ("1.5 FTE × 200 = 300"). Load = forecast / (FTE × per-FTE). Above 100% the row turns red with a "!" icon and a live red alert shows under the table before saving: "Overbooked on <day> by N orders. Marketplaces will close earlier on this day." (one line per day). After Save the green banner keeps "Changes saved / FTE updated. Capacity recalculated." and adds red "Still overbooked on <day> by N orders." lines. Save stays enabled. Mon-Wed (past) are greyed and disabled, Thu 26 Nov (today) stays editable, Fri 27 Nov carries a "Tomorrow" tag.
+- Account settings, Own-channel protection threshold: a muted "Last changed Wed 25 Nov by A. Popescu" line; when the typed value is valid and different, a live line "Would close N more slots in M stores" / "Would reopen N slots in M stores" (all stores, Delivery, today, same slot rule). Save with a changed threshold opens a confirm modal ("Change protection threshold from 20% to 30%?", "N slots in M stores will close for marketplaces. This applies to all your stores.", Cancel / Apply to all stores); focus starts on Cancel, Tab is trapped, Escape closes it. After applying: toast "Threshold changed from 20% to 30%" with Undo, and "Last changed today by you". Other settings still save directly. Copy never implies a manager sees every store ("all your stores"); the 260-store list is fixture data.
+- Slot drawer closed alert: "Closed at {100-prot}% full, now {util}%. {available} left for your own channel." plus a link "Protection threshold {prot}%" to Account settings. "Reserved" has an info tooltip (title + aria) in the drawer legend and the slot table header. Notification settings says "Applies to all your stores." The RESTRICTED tag is now an amber "Marketplace orders restricted" chip.
+- All stores badges have tooltips: Open stores with high use "No slot above {100-prot}% full. Tightest slot: N%"; Closed badges "Protection threshold {prot}%. Closes marketplaces above {100-prot}% full. Change in Settings". Pipera 45 at 10% shows Open at 98% store use because the Figma fixture's store tile (745 of 760) is independent of the generated slot use (the tightest slot stays under 90%); this is fixture data, left unchanged.
+- Period dropdown: Today (Thu 26 Nov), Tomorrow (Fri 27 Nov), Sat 28 Nov ... Wed 2 Dec.
+- Notifications drawer: grouped by store (heading + count); each item has Snooze 1 h and Dismiss (toast with Undo, counts update); Reopen and Set pickers (FTE) ask an inline confirm first ("Reopen Calea Floreasca 133?" Cancel / Reopen).
+
 ## Run
 - Open `index.html` in a browser, or run `python3 -m http.server` in this folder.
 - The **Screens** button (bottom left) lists every route. Routes are hash-based, for example `#/r19/default`.
@@ -58,7 +66,8 @@ One route per screen on the Figma working page (23). Not reproduced on purpose: 
 - `#/couriers` Couriers
 
 ## Product rules reflected
-- Terms: Notifications, Notification settings, time slot, Settings (first item of the Filters row on every screen), Account settings, Store settings, Update (shift rows and notification rows).
+- Notifications drawer: the header button is labelled "Settings" (same teal gear style as the top-bar Settings) and opens the Notification settings panel.
+- Terms: Notifications, Notification settings, time slot, Settings (first item of the Filters row on every screen), Account settings, Store settings, Set pickers (FTE) (shift rows and notification rows; drawer title Set pickers (FTE)).
 - One account-level own-channel protection threshold (default 20%). Marketplaces are Open or Closed only. A slot is Closed when its use is above 100% minus the threshold. Closed stores show Closed in every slot. All stores badge: Open / "Closed for N slots" / "Closed for all slots" (N = number of that store's slots whose use is above the limit; the Figma fixtures get slot capacities/use that produce the Figma counts: Timisoara 3, Pipera 3, Victoriei 4, Maniu 3, Bravu 3, Unirii 2, Stefan and Rahovei Open).
 - FTE is edited per shift only, in the Set FTE drawer: steps of 0.5, error "Steps of 0.5", saved state, no maximum.
 - Time slot drawer: Total capacity, Committed, Reserved, Available, Forecast as order counts, "Committed by type" (Wolt/Bolt/Glovo) inside the Capacity tab; tabs are Capacity / Resources / Orders (N), no Marketplace tab; no FTE card, no picking block; Closed slots show a red "Marketplaces closed for this time slot" alert (static text) under the tabs. Slot tables (header "Marketplace(s)"; All stores keeps "Marketplaces") have a Reserved orders column (140/150/130/140/220/120/92).
@@ -73,9 +82,9 @@ One route per screen on the Figma working page (23). Not reproduced on purpose: 
 ## Assumptions (please confirm)
 - Orders, Picking, Couriers pages, Store settings, Order restriction and the generated-store page have no Figma frame.
 - Idle capacity notification type is hidden by default (Show switch off), as in Figma.
-- Update on a notification opens Set FTE for the first shift; Manage opens Order restriction.
+- Set pickers (FTE) on a notification opens the Set pickers (FTE) drawer for the first shift (after an inline confirm, like Reopen); Manage opens Order restriction.
 - Mobile sign-in is shown in a 375x812 frame (iframe) on desktop.
 - Menu items other than Capacity, Collect and Release unused orders are not clickable.
 
 ## QA
-`python3 qa/run_checks.py` (needs Python Playwright + chromium; `--shots DIR` saves screenshots). Checks every route at 1440 and 375 (render, text, no retired wording, no horizontal scroll, height >= 900, no console errors) plus interactions. Last run: 395 passed, 0 failed.
+`python3 qa/run_checks.py` (needs Python Playwright + chromium; `--shots DIR` saves screenshots). Checks every route at 1440 and 375 (render, text, no retired wording, no horizontal scroll, height >= 900, no console errors) plus interactions. Last run: 540 passed, 0 failed.
