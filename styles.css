@@ -811,3 +811,21 @@ table.stores.st2.has-mk thead th { height: 70px; }
 .ag-h { color: var(--text); }
 .att-list .act { max-width: 92px; white-space: normal; text-align: right; line-height: 16px; }
 .att-list .act { max-width: 100px; padding: 0 8px; }
+
+/* flat notifications list again: RESTRICTED amber chip sits between text and action */
+.drawer .alert-row .restricted { display: inline-block; margin: 0 0 0 4px !important; padding: 0 10px !important; font-size: 11px !important; line-height: 20px !important; letter-spacing: .02em; text-transform: uppercase; font-weight: 700; }
+.drawer .alert-row.rs .txt { flex: 1 1 140px; }
+.fte-row.tom .tag-tom, .fte-row .tag-tom { white-space: nowrap; }
+
+/* toasts: centred in the visible area, 32px from the bottom */
+.toasts { left: 0; right: 0; bottom: 32px; justify-items: center; pointer-events: none; } .toast { pointer-events: auto; }
+@media (max-width: 900px) { .toasts { left: 0 !important; right: 0 !important; padding: 0 16px; } }
+
+/* Set pickers (FTE) columns as in Figma: Day 112 / FTE 112 / Est. capacity 136 / Forecast · load 112 of a 472px grid (8px row padding) */
+@media (min-width: 901px) { .fte-row { grid-template-columns: 104px 112px 136px 104px; padding: 0 8px; } }
+
+/* Overbooked row: red field + message under it; no row fill, no bottom alert */
+.fte-row.over { background: none !important; grid-template-rows: 56px auto; align-content: start; }
+.fte-row.over .calc, .fte-row.over .load { color: var(--red-fg); font-weight: 600; }
+.fte-row .ov-msg { grid-column: 2 / -1; margin: -8px 0 10px; font-size: 12px; line-height: 18px; color: #c92a2a; }
+.fte-row .calc { white-space: nowrap; font-size: 13px; }

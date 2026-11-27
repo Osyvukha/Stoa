@@ -53,15 +53,15 @@ window.DATA = {
       { r: "12:00–13:00", cap: 80, com: 72, av: 2, fc: 76, internal: { "Same day": 43 }, market: { Wolt: 17, Bolt: 6, Glovo: 6 } },
       { r: "13:00–14:00", cap: 100, com: 60, av: 30, fc: 84 }
     ],
-    // Set FTE drawer, Mon 23 – Sun 29 Nov: FTE per shift, forecast per day
+    // Set pickers (FTE) drawer: the next 7 days starting today (Thu 26 Nov): FTE per shift, forecast per day
     week: [
-      { fte: [1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 1.0], fc: [255, 240, 245, 260, 350, 400, 170] },
-      { fte: [1.5, 1.5, 1.5, 2.0, 2.0, 2.5, 1.0], fc: [250, 245, 240, 270, 340, 380, 160] }
+      { fte: [1.5, 2.0, 2.0, 1.0, 1.5, 1.5, 1.5], fc: [260, 350, 400, 170, 250, 245, 240] },
+      { fte: [2.0, 2.0, 2.5, 1.0, 2.0, 2.0, 2.0], fc: [270, 340, 380, 160, 260, 255, 250] }
     ],
     shiftFte: [1.5, 2.0]
   },
   days: ["Today", "Fri 27 Nov", "Sat 28 Nov", "Sun 29 Nov", "Mon 30 Nov", "Tue 1 Dec", "Wed 2 Dec"],
-  week: ["Mon 23 Nov", "Tue 24 Nov", "Wed 25 Nov", "Thu 26 Nov", "Fri 27 Nov", "Sat 28 Nov", "Sun 29 Nov"]
+  week: ["Thu 26 Nov", "Fri 27 Nov", "Sat 28 Nov", "Sun 29 Nov", "Mon 30 Nov", "Tue 1 Dec", "Wed 2 Dec"]
 };
 
 /* ------------------------------------------------------------------

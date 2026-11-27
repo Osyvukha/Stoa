@@ -50,7 +50,7 @@
     app: { prot: String(D.account.protect), th: D.thresholds.map(t => String(t[1])), thp: D.thresholds.map(t => t[3]), shw: D.thresholds.map(t => t[5]), touched: false },
     st: null, setBase: null, storeSet: {}, ss: null, ssBase: null,
     rsOn: true, rsResume: "20", rsBase: null, resumed: false,
-    protMeta: "Wed 25 Nov by A. Popescu", hid: {}, cf: null, fteSaved: {}, shiftOv: {}, fte: null, fteBase: null, fteKey: null, keepSave: false
+    cf: null, fteSaved: {}, shiftOv: {}, fte: null, fteBase: null, fteKey: null, keepSave: false
   };
   S.rsBase = JSON.stringify([S.rsOn, S.rsResume]);
 
@@ -142,7 +142,7 @@
   const slowPrep = () => +S.app.th[2];
   const TYPE_IDX = { closed: 0, fte: 1, prod: 2, prepup: 3, fill: 4, fc: 5, idle: 6 };
   const akey = a => a.t + "|" + a.s;
-  const activeAlerts = () => D.alerts.filter(a => !S.hid[akey(a)] && (!S.app.touched || S.app.shw[TYPE_IDX[a.type]]));
+  const activeAlerts = () => D.alerts.filter(a => (!S.app.touched || S.app.shw[TYPE_IDX[a.type]]));
 
   function alloc(tot, weights) {
     const sw = weights.reduce((a, b) => a + b, 0), raw = weights.map(w => w / sw * tot), base = raw.map(Math.floor); let rem = tot - base.reduce((a, b) => a + b, 0);
@@ -162,7 +162,7 @@
     s.internal = it > 0 ? { [internalType(s, day)]: it } : {}; s.market = distribute(s.com - it, MK_W, R);
   }
   const FIXN = { 3: 3, 4: 4, 5: 3, 6: 0, 7: 3, 8: 0, 9: 2 }; // closed slots per Figma fixture (All stores badge)
-  function genSlots(st, day, collect, R) {
+  function genSlotsRaw(st, day, collect, R) {
     const f = collect ? .3 : 1, df = DAYF[day];
     if (!st.cap) { const fcs = alloc(Math.round(st.forecast * f * df), SHAPE); return HOURS.map((r, i) => ({ r, cap: 0, com: 0, res: 0, av: 0, fc: fcs[i] })); }
     const u = st.used / st.cap;
@@ -195,6 +195,17 @@
       }
       return s;
     });
+  }
+  // Consistency rule: a store can only be Open at a threshold if its use is within the limit, so its busiest slot is never
+  // below the store's own use (store use <= tightest slot use). Raise the busiest slot when the generator left it lower.
+  function genSlots(st, day, collect, R) {
+    const out = genSlotsRaw(st, day, collect, R);
+    if (day === 0 && !collect && st.cap) {
+      const su = st.used / st.cap, useOf = x => (x.cap - x.av) / x.cap;
+      const cand = out.filter(x => x.cap > 0); const top = cand.reduce((b, x) => useOf(x) > useOf(b) ? x : b, cand[0]);
+      if (top && useOf(top) < su) { const need = Math.min(top.cap, Math.ceil(su * top.cap)); top.com = Math.max(top.com, need - top.res); top.av = top.cap - top.com - top.res; }
+    }
+    return out;
   }
   const earnedK = (id, st) => { const per = 55 + D.hash(id) % 25, e = Math.round(st.used * per / 100) / 10; return [e.toFixed(1) + "k", (Math.round(e * 1.12 * 10) / 10).toFixed(1) + "k"]; };
   function buildModel(id) {
@@ -238,7 +249,6 @@
   const matches = s => { const q = S.q.trim().toLowerCase(); return !q || s.name.toLowerCase().includes(q) || codeOf(s).toLowerCase() === q; };
 
   // ---------- shift FTE (edited per shift only; one value per shift per day, steps of 0.5, no maximum) ----------
-  const TODAY_I = 3; // Thu 26 Nov is today in the prototype; Mon-Wed are past, Fri is tomorrow
   const perFte = id => +((S.storeSet[id] || {}).perFte) || D.account.perFte;
   const baseShiftFte = (id, sh) => id === 2 ? D.timisoara.shiftFte[sh] : ALL[id].cap ? Math.round(ALL[id].fte) / 2 : 0;
   function shiftWeek(id, sh) {
@@ -249,7 +259,7 @@
     return DAYF.map(f => ({ fte: st.cap ? snap(b * f) : 0, fc: Math.round(st.forecast / 2 * f) }));
   }
   const shiftToday = (id, sh) => {
-    if (S.day > 0) return shiftWeek(id, sh)[(3 + S.day) % 7].fte;
+    if (S.day > 0) return shiftWeek(id, sh)[S.day].fte;
     const ov = S.shiftOv[id + ":" + sh]; return ov !== undefined ? ov : baseShiftFte(id, sh);
   };
   const validFte = v => { v = String(v).trim().replace(",", "."); if (v === "" || isNaN(+v) || +v < 0) return false; return Math.abs(+v * 2 - Math.round(+v * 2)) < 1e-9; };
@@ -264,8 +274,8 @@
       const key = P.id + ":" + P.shift, same = pp && pp.drawer === "fte" && pp.id === P.id && pp.shift === P.shift;
       if (!same || S.fteKey !== key || P.fstate === "error" || (P.fstate === "saved" && !S.keepSave)) {
         S.fteKey = key; S.fte = shiftWeek(P.id, P.shift).map(d => d.fte.toFixed(1)); S.fteBase = JSON.stringify(S.fte);
-        if (P.fstate === "error") S.fte[5] = "2.3";
-        if (P.fstate === "saved" && !S.keepSave) { S.fte[4] = "2.5"; S.fte[5] = "2.5"; S.fteBase = JSON.stringify(S.fte); }
+        if (P.fstate === "error") S.fte[2] = "2.3";
+        if (P.fstate === "saved" && !S.keepSave) { S.fte[1] = "2.5"; S.fte[2] = "2.5"; S.fteBase = JSON.stringify(S.fte); }
       }
     }
     if (isSettings(P.drawer) && !(pp && isSettings(pp.drawer))) { S.st = { prot: S.app.prot, th: S.app.th.slice(), thp: S.app.thp.slice(), shw: S.app.shw.slice() }; S.setBase = JSON.stringify(S.st); }
@@ -280,12 +290,17 @@
   // ---------- small UI helpers ----------
   const periodSelect = () => `<select id="period" class="select" data-k="period" aria-label="Period">${PERIODS.map((x, i) => `<option value="${i}" ${i === S.day ? "selected" : ""}>${x}</option>`).join("")}</select>`;
   const bar = p => `<span class="bar ${p >= 90 ? "full" : ""}"><i style="width:${Math.min(p, 100)}%"></i></span>`;
+  // toasts sit centred in the visible area (right of the sidebar, left of an open drawer), 32px from the bottom
+  function placeToasts(c) {
+    const m = document.querySelector(".menu"), dr = document.querySelector(".drawer"), desk = innerWidth > 900;
+    c.style.left = (desk && m ? Math.round(m.getBoundingClientRect().right) : 0) + "px"; c.style.right = (dr ? Math.round(innerWidth - dr.getBoundingClientRect().left) : 0) + "px";
+  }
   function toast(msg) {
-    const c = document.getElementById("toasts"); if (!c) return;
+    const c = document.getElementById("toasts"); if (!c) return; placeToasts(c);
     const d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "status"); d.textContent = msg; c.appendChild(d); setTimeout(() => d.remove(), 3500);
   }
   function toastUndo(msg, label, fn) {
-    const c = document.getElementById("toasts"); if (!c) return;
+    const c = document.getElementById("toasts"); if (!c) return; placeToasts(c);
     const d = document.createElement("div"); d.className = "toast has-act"; d.setAttribute("role", "status");
     const sp = document.createElement("span"); sp.textContent = msg; const b = document.createElement("button"); b.type = "button"; b.className = "toast-act"; b.textContent = label;
     b.addEventListener("click", () => { fn(); d.remove(); }); d.append(sp, b); c.appendChild(d); setTimeout(() => d.remove(), 8000);
@@ -494,12 +509,8 @@
   // Notifications drawer ("Needs attention") with a Settings button (opens Notification settings)
   function alertsDrawer() {
     const act = activeAlerts(), list = act.filter(a => S.alertFilter === "all" || a.type === S.alertFilter);
-    const groups = []; list.forEach(a => { const n = a.s.split(" · ")[0]; let g = groups.find(x => x.n === n); if (!g) groups.push(g = { n, items: [] }); g.items.push(a); });
-    const PL = { high: "High priority", med: "Medium priority", low: "Low priority" };
-    const item = a => { const id = idByName(a.s.split(" · ")[0]), key = "d" + akey(a), ix = D.alerts.indexOf(a);
-      return `<div class="alert-row ${a.restricted ? "rs" : ""}"><span class="ico ${a.p}">${prioIcon[a.p]}</span><div class="txt"><b>${a.t}</b><span>${PL[a.p]}</span>${a.restricted ? '<span class="restricted">Marketplace orders restricted</span>' : ""}</div>${alertBtn(a, id, key)}<div class="ar-acts"><button type="button" class="link sm" data-act="snooze" data-i="${ix}">Snooze 1 h</button><button type="button" class="link sm" data-act="dismiss" data-i="${ix}">Dismiss</button></div></div>`; };
     return drawerShell(`Needs attention (${act.length})`, `<div class="body"><div class="pills" role="group" aria-label="Notification type">${D.alertTypes.map(([k, l]) => `<button class="pill ${S.alertFilter === k ? "on" : ""}" aria-pressed="${S.alertFilter === k}" data-act="afilter" data-k="${k}">${S.alertFilter === k ? svg('<path d="m5 12 5 5 9-10"/>', 14, 2.5) : ""}${l}</button>`).join("")}</div>
-      ${groups.map(g => `<section class="ag" aria-label="${g.n}"><h3 class="ag-h">${g.n} <span class="count">${g.items.length}</span></h3>${g.items.map(item).join("")}</section>`).join("") || '<p class="empty">No notifications of this type</p>'}</div>`,
+      ${list.map(a => `<div class="alert-row ${a.restricted ? "rs" : ""}"><span class="ico ${a.p}">${prioIcon[a.p]}</span><div class="txt"><b>${a.t}</b><span>${a.s}</span></div>${a.restricted ? '<span class="restricted">RESTRICTED</span>' : ""}${alertBtn(a, idByName(a.s.split(" · ")[0]), "d" + akey(a))}</div>`).join("") || '<p class="empty">No notifications of this type</p>'}</div>`,
       "", "Needs attention", `<button class="settings-btn ns-btn" data-act="notif-settings">${I.gear}<span>Settings</span></button>`);
   }
 
@@ -517,7 +528,7 @@
     const bad = protBad(st.prot) || st.th.some((v, i) => st.shw[i] && thErr(v, i));
     const pBad = protBad(st.prot), pChanged = !pBad && +st.prot !== +S.app.prot;
     const live = pChanged ? impactText(thImpact(+S.app.prot, +st.prot)) : "";
-    const cap = acc ? `<h6 class="sec first">Capacity</h6><div class="cap-row pt"><div id="pt-l"><span class="lbl">Own-channel protection threshold, %</span><span class="sub">Marketplaces close when less than this share of capacity is left. Applies to all stores and slots</span></div><span class="ctl"><input ${numAttr("prot", st.prot, pBad, "Own-channel protection threshold, %")} aria-describedby="pt-l pt-meta">${pBad ? '<span class="err-msg">Enter 0–100</span>' : ""}</span></div><div class="pt-meta" id="pt-meta"><span class="pt-last">Last changed ${S.protMeta}</span><span class="pt-live" role="status" aria-live="polite">${live}</span></div>` : "";
+    const cap = acc ? `<h6 class="sec first">Capacity</h6><div class="cap-row pt"><div id="pt-l"><span class="lbl">Own-channel protection threshold, %</span><span class="sub">Marketplaces close when less than this share of capacity is left. Applies to all stores and slots</span></div><span class="ctl"><input ${numAttr("prot", st.prot, pBad, "Own-channel protection threshold, %")} aria-describedby="pt-l pt-meta">${pBad ? '<span class="err-msg">Enter 0–100</span>' : ""}</span></div><div class="pt-meta" id="pt-meta"><span class="pt-live" role="status" aria-live="polite">${live}</span></div>` : "";
     return drawerShell(acc ? "Account settings" : "Notification settings", `<div class="body set-body">${cap}${notifSection(st)}</div>`,
       `<footer class="actions"><button class="btn" data-act="close">Cancel</button><button class="btn filled" data-act="save-settings" ${dirty && !bad ? "" : "disabled"}>Save changes</button></footer>`);
   }
@@ -549,15 +560,12 @@
     const sh = SHIFTS[P.shift], week = shiftWeek(P.id, P.shift), K = perFte(P.id), saved = P.fstate === "saved";
     const ok = S.fte.map(validFte), invalid = ok.some(x => !x), dirty = JSON.stringify(S.fte) !== S.fteBase;
     const over = [];
-    const rows = D.week.map((d, i) => { const v = ok[i] ? numOf(S.fte[i]) : null, cap = v === null ? null : Math.round(v * K), fc = week[i].fc, ob = cap !== null && fc > cap && i >= TODAY_I;
-      if (ob && i >= TODAY_I) over.push({ d, n: fc - cap });
-      const past = i < TODAY_I, tom = i === TODAY_I + 1;
-      return `<div class="fte-row ${ob ? "over" : ""} ${past ? "past" : ""} ${tom ? "tom" : ""}"><span class="day">${d}${tom ? '<span class="tag-tom">Tomorrow</span>' : ""}</span><span><input ${numAttr("fte:" + i, S.fte[i], !ok[i], "FTE on " + d)} ${past ? "disabled" : ""} data-step=".5">${ok[i] ? "" : `<span class="err-msg" id="err-fte-${i}">Steps of 0.5</span>`}</span><span class="calc">${cap === null ? "—" : `${v} FTE × ${K} = <b>${cap}</b>`}</span><span class="load">${ob ? '<span class="ov-ic" role="img" aria-label="Overbooked">!</span>' : ""}${fc} · ${cap ? pct(fc, cap) + "%" : "—"}</span></div>`; }).join("");
-    const overAlert = over.length && !saved ? `<div class="fte-over" role="status" aria-live="polite"><span class="ov-ic" aria-hidden="true">!</span><div>${over.map(o => `<p>Overbooked on ${o.d} by ${o.n} orders. Marketplaces will close earlier on this day.</p>`).join("")}</div></div>` : "";
-    const still = over.length ? `<div class="still-over">${over.map(o => `<p><span class="ov-ic" aria-hidden="true">!</span>Still overbooked on ${o.d} by ${o.n} orders.</p>`).join("")}</div>` : "";
-    return drawerShell("Set pickers (FTE)", `${saved ? savedAlert("Changes saved", "FTE updated. Capacity recalculated.", still) : ""}<div class="body"><h3 class="sft">${sh.n} · ${sh.ch}</h3>
-      <p class="desc">Estimated capacity = FTE × ${K} orders per FTE. Slot capacity in the store view is planned per slot and can differ.</p>
-      <div class="fte-row fte-h"><span>Day</span><span>FTE</span><span>Est. capacity</span><span>Forecast · load</span></div>${rows}${overAlert}</div>`,
+    const rows = D.week.map((d, i) => { const v = ok[i] ? numOf(S.fte[i]) : null, cap = v === null ? null : Math.round(v * K), fc = week[i].fc, ob = cap !== null && fc > cap;
+      if (ob) over.push({ d, n: fc - cap });
+      return `<div class="fte-row ${ob ? "over" : ""} "><span class="day">${d}</span><span><input ${numAttr("fte:" + i, S.fte[i], !ok[i] || ob, "FTE on " + d)} data-step=".5">${ok[i] ? "" : `<span class="err-msg" id="err-fte-${i}">Steps of 0.5</span>`}</span><span class="calc">${cap === null ? "—" : `${v} FTE × ${K} = <b>${cap}</b>`}</span><span class="load">${fc} · ${cap ? pct(fc, cap) + "%" : "—"}</span>${ob ? `<span class="ov-msg err-msg" id="err-fte-${i}">Overbooked by ${fc - cap} orders. Marketplaces will close earlier.</span>` : ""}</div>`; }).join("");
+    return drawerShell("Set pickers (FTE)", `${saved ? savedAlert("Changes saved", "FTE updated. Capacity recalculated.") : ""}<div class="body"><h3 class="sft">${sh.n} · ${sh.ch}</h3>
+      <p class="desc">Enter FTE for this shift for the next 7 days, starting today. Slot capacity in the store view is planned per slot and can differ.</p>
+      <div class="fte-row fte-h"><span>Day</span><span>FTE</span><span>Est. capacity</span><span>Forecast · load</span></div>${rows}</div>`,
       `<footer class="actions"><button class="btn" data-act="close">${saved ? "Close" : "Cancel"}</button><button class="btn filled" data-act="save-fte" ${dirty && !invalid ? "" : "disabled"}>Save changes</button></footer>`);
   }
 
@@ -642,6 +650,7 @@
     else if (triggerEl && document.contains(triggerEl)) { try { triggerEl.focus(); } catch (e) {} }
     else if (trigKey && !document.activeElement.closest(".menu")) { const c = [...$app.querySelectorAll("[data-act='" + trigKey.act + "']")].find(e => e.textContent.trim() === trigKey.text && (e.dataset.id || "") === trigKey.id && (e.dataset.n || "") === trigKey.n && (e.dataset.s || "") === trigKey.s); if (c) { try { c.focus(); } catch (e) {} } trigKey = null; }
     document.body.style.overflow = dr ? "hidden" : "";
+    { const tc = document.getElementById("toasts"); if (tc) placeToasts(tc); }
     if (P.pin) { const c = $app.querySelector('.col[data-i="1"]'); if (c) showTip(c); }
   }
   function renderDrawer() {
@@ -701,11 +710,6 @@
       }
       case "cf-no": { const key = S.cf; S.cf = null; refreshView(); const b = [...document.querySelectorAll('[data-act="alert"]')].find(x => x.dataset.key === key); if (b) b.focus(); break; }
       case "cf-yes": S.cf = null; alertAction(t.dataset.a, +t.dataset.id); break;
-      case "snooze": case "dismiss": {
-        const al = D.alerts[+t.dataset.i], k = akey(al), snz = a === "snooze"; S.hid[k] = snz ? "snoozed" : "dismissed"; S.cf = null; render();
-        toastUndo(snz ? "Snoozed for 1 h" : "Notification dismissed", "Undo", () => { delete S.hid[k]; render(); });
-        break;
-      }
       case "ofilter": S.ordFilter = t.dataset.k; render(); break;
       case "svc": S.service = t.dataset.v; render(); break;
       case "show-closed": S.mkOnly = !S.mkOnly; S.page = 1; render(); break;
@@ -724,8 +728,8 @@
         if (from === to) { S.app = nw; toast("Changes saved"); go(target); break; }
         const im = thImpact(from, to), body = `${plural(im.n, "slot")} in ${plural(im.m, "store")} will ${im.close ? "close" : "reopen"} for marketplaces. This applies to all your stores.`;
         openModal({ title: `Change protection threshold from ${from}% to ${to}%?`, body, ok: "Apply to all stores", onOk: () => {
-          const prevMeta = S.protMeta, prevProt = S.app.prot; S.app = nw; S.protMeta = "today by you"; go(target);
-          toastUndo(`Threshold changed from ${from}% to ${to}%`, "Undo", () => { S.app = Object.assign({}, S.app, { prot: prevProt }); S.protMeta = prevMeta; render(); });
+          const prevProt = S.app.prot; S.app = nw; go(target);
+          toastUndo(`Threshold changed from ${from}% to ${to}%`, "Undo", () => { S.app = Object.assign({}, S.app, { prot: prevProt }); render(); });
         } });
         break;
       }
@@ -733,7 +737,7 @@
       case "save-rs": S.rsBase = JSON.stringify([S.rsOn, S.rsResume]); renderDrawer(); break;
       case "save-fte": {
         const key = P.id + ":" + P.shift, old = shiftWeek(P.id, P.shift), nw = S.fte.map((v, i) => ({ fte: numOf(v), fc: old[i].fc }));
-        if (nw[3].fte !== old[3].fte) S.shiftOv[key] = nw[3].fte;
+        if (nw[0].fte !== old[0].fte) S.shiftOv[key] = nw[0].fte; // index 0 = today
         S.fteSaved[key] = nw; S.fteBase = JSON.stringify(S.fte); S.keepSave = true; go(fteRoute(P.id, P.shift, "saved")); break;
       }
       case "sgrp": S.so[t.dataset.s] = S.so[t.dataset.s] === false; render(); break;
