@@ -831,7 +831,7 @@ table.stores.st2.has-mk thead th { height: 70px; }
 .fte-row .calc { white-space: nowrap; font-size: 13px; }
 
 /* Figma 11.27: KPI cards 9px bold title (-2%), 20px value, 11px trend, value row pinned to the bottom; band ends 12px below the cards */
-.kpi .t span:first-child { font-size: 9px; font-weight: 700; letter-spacing: -.02em; line-height: 14px; }
+.kpi .t span:first-child { font-size: 11px; font-weight: 700; letter-spacing: -.02em; line-height: 14px; }
 .kpi .v b { font-size: 20px; font-weight: 700; line-height: 26px; }
 .kpi .v .up, .kpi .v .down { font-size: 11px; font-weight: 600; line-height: 16px; }
 .kpi .v .up svg, .kpi .v .down svg { width: 11px; height: 11px; }
@@ -840,7 +840,7 @@ table.stores.st2.has-mk thead th { height: 70px; }
 .kpi .v { margin-top: auto; padding-top: 4px; align-items: center; }
 @media (min-width: 901px) { .kpi, .kpis.k7 .kpi { min-height: 56px; } .kpis.k7 .kpi .t, .kpis.k7 .kpi.wrap .t { min-height: 14px; } }
 .top { padding-bottom: 12px; }
-.content { padding-bottom: 80px; }
+.content { padding-bottom: 73px; }
 /* stores list: FTE values are plain regular text */
 table.st2 td.fte-v { color: var(--text); font-weight: 400; }
 /* 16px between fields */
@@ -865,10 +865,35 @@ table.stores.st2.has-mk thead th { height: 71px; }
 .set-body .th-row .sub { margin-top: 4px; }
 .set-body .th-row .link.strong { padding: 0; margin-top: 4px; height: 18px; }
 @media (min-width: 901px) { .kpis.k7 .kpi { min-height: 70px; } }
-.top:has(.kpis.k7) ~ .content { padding-bottom: 86px; }
+.top:has(.kpis.k7) ~ .content { padding-bottom: 76px; }
 table.stores.st2.has-mk thead + tbody tr:nth-child(3) td { height: 55px; }
 .top-controls .settings-btn { margin-right: 0; }
 
 /* Figma sync 27 Nov: long slot alert texts stay on one line (Figma rows are 58px high; the Figma text is wider than the card) */
 .att-list .alert-row .txt { min-width: 0; flex: 1 1 auto; }
 .att-list .alert-row .txt b, .att-list .alert-row .txt > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 8px between KPI cards and between alert cards (Figma 27 Nov) */
+.kpis { gap: 8px; }
+.att-list { gap: 8px; }
+
+/* Figma 11.27: KPI cards: title Body/xs/Semibold 12/18.6, value Body/md/Bold 16/24.8, trend Text/xs/Semibold 12; radius 8, padding 8/16, 4px title-to-value gap */
+.kpi { border-radius: 8px; padding: 8px 16px; display: flex; flex-direction: column; justify-content: flex-start; gap: 4px; }
+.kpi .t span:first-child { font-size: 12px; font-weight: 600; letter-spacing: 0; line-height: 18px; }
+.kpi .t, .kpi.wrap .t { min-height: 18px; height: auto; align-items: flex-start; line-height: 18px; }
+.kpi .v { margin-top: auto; padding-top: 0; align-items: center; }
+.kpi .t { margin-bottom: 4px; }
+.kpi { gap: 0; }
+.kpi .v b { font-size: 16px; font-weight: 700; line-height: 24px; }
+.kpi .v .up, .kpi .v .down { font-size: 12px; font-weight: 600; line-height: 18px; }
+.kpi .v .up svg, .kpi .v .down svg { width: 12px; height: 12px; }
+@media (min-width: 901px) { .kpi, .kpis.k7 .kpi { min-height: 62px; } .kpis.k7 .kpi { min-height: 80px; } .kpis.k7 .kpi .t, .kpis.k7 .kpi.wrap .t { min-height: 18px; } }
+
+/* Orders / In-store picking / Couriers are not part of the prototype: shown in the menu, not clickable */
+.sidebar .item.static, .item.static { cursor: default; pointer-events: none; }
+
+/* Figma: when any KPI title wraps to two lines, every card's value row sits at the bottom of the card */
+.kpis { align-items: stretch; }
+.kpi { justify-content: space-between; }
+.kpi .v { margin-top: auto; }
+.kpi .v b { font-family: var(--font); }
