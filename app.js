@@ -46,7 +46,7 @@
   const S = {
     mobileMenu: false, protoOpen: false, menuCollapsed: lsGet("stoa.menu") === "collapsed",
     q: "", service: "All", page: 1, per: 10, mkOnly: false, attOpenStore: true, alertFilter: "all", ordFilter: "All",
-    so: {}, day: 0, chart: "collapsed", curId: 2, tab: "Capacity", stack: [], hl: -1, reopened: {},
+    so: {}, sort: { k: null, d: null }, day: 0, chart: "collapsed", curId: 2, tab: "Capacity", stack: [], hl: -1, reopened: {},
     app: { prot: String(D.account.protect), th: D.thresholds.map(t => String(t[1])), thp: D.thresholds.map(t => t[3]), shw: D.thresholds.map(t => t[5]), touched: false },
     st: null, setBase: null, storeSet: {}, ss: null, ssBase: null,
     rsOn: true, rsResume: "20", rsBase: null, resumed: false,
@@ -300,12 +300,32 @@
 
   // ---------- All stores ----------
   const openAllCount = () => ALL.filter(s => closedN(s) === 0).length;
+  // Sorting (All stores): one active column; asc -> desc -> none. Rows without a value ('—', 'No capacity') are always last, ties by store name.
+  const earnNum = e => { if (!e) return null; const m = /^([\d.]+)\s*([MkK]?)/.exec(e); return m ? parseFloat(m[1]) * (/M/.test(m[2]) ? 1000 : 1) : null; };
+  const SORT_KEY = {
+    mk: v => { const n = closedN(ALL[v.id]); return n === "all" ? 99 : n; },
+    fte: v => v.fte,
+    use: v => v.cap ? pct(v.used, v.cap) : null,
+    fc: v => v.forecast,
+    prep: v => v.prep ? v.prep : null,
+    earn: v => earnNum(v.earned)
+  };
+  const sortRows = rows => {
+    const k = S.sort.k, d = S.sort.d; if (!k || !d) return rows; const f = SORT_KEY[k], dir = d === "asc" ? 1 : -1;
+    return rows.map((v, i) => [v, f(v), i]).sort((a, b) => {
+      if ((a[1] === null) !== (b[1] === null)) return a[1] === null ? 1 : -1;
+      if (a[1] !== b[1] && a[1] !== null) return (a[1] - b[1]) * dir;
+      return a[0].name.localeCompare(b[0].name) || a[2] - b[2];
+    }).map(x => x[0]);
+  };
+  const SORT_I = { none: svg('<path d="m8 9 4-4 4 4M8 15l4 4 4-4"/>', 14), asc: svg('<path d="m6 15 6-6 6 6"/>', 14), desc: svg('<path d="m6 9 6 6 6-6"/>', 14) };
+  const sortTh = (label, k) => { const st = S.sort.k === k ? S.sort.d : null; return `<th aria-sort="${st === "asc" ? "ascending" : st === "desc" ? "descending" : "none"}"><button class="th-sort ${st ? "on" : ""}" data-act="sort" data-k="${k}">${label}<span class="si" aria-hidden="true">${SORT_I[st || "none"]}</span></button></th>`; };
   function allStores(P) {
     const key = P.key, open = !(key === "collapsed" || key === "one-collapsed"), v = P.variant, withMk = !v || v === "o4";
     const act = activeAlerts(), list = key.startsWith("one") ? act.slice(0, 1) : key === "zero" ? [] : act;
     const rows = ALL.filter(s => matches(s) && (!S.mkOnly || closedN(s) !== 0)), totalN = rows.length, pages = Math.max(1, Math.ceil(totalN / S.per));
     if (S.page > pages) S.page = pages;
-    const from = (S.page - 1) * S.per, shown = rows.map(rowView).slice(from, from + S.per), th = slowPrep();
+    const from = (S.page - 1) * S.per, shown = sortRows(rows.map(rowView)).slice(from, from + S.per), th = slowPrep();
     const tr = shown.map(s => {
       const p = s.cap ? pct(s.used, s.cap) : 0;
       return `<tr><td><button class="store-name" data-act="store" data-id="${s.id}">${s.name}</button><span class="sub">${s.sub}</span></td>${withMk ? `<td>${mkBadge(s)}</td>` : ""}
@@ -314,7 +334,7 @@
       <td>${s.forecast}<span class="sub ${s.vs > 0 ? "warn" : ""}">${s.vs === null ? "No capacity" : `${signed(s.vs)}% capacity`}</span></td>
       <td class="${s.prep && s.prep >= th ? "pos" : ""}">${s.prep ? s.prep.toFixed(1) : "—"}</td><td>${s.earned ? `${s.earned} / ${s.target}` : "—"}</td></tr>`;
     }).join("");
-    const cols = withMk ? [216, 180, 55, 154, 121, 121, 153] : [291, 82, 199, 140, 129, 159];
+    const cols = withMk ? [201, 180, 70, 154, 121, 121, 153] : [226, 70, 194, 150, 150, 210];
     const colg = `<colgroup>${cols.map(w => `<col style="width:${w}px">`).join("")}</colgroup>`;
     const nc = cols.length;
     const empty = shown.length === 0 ? `<tr><td colspan="${nc}" class="empty" style="text-align:center;padding:32px">No stores match the filters</td></tr>` : "";
@@ -332,7 +352,7 @@
         <div class="tools"><input class="input grow" data-k="q" placeholder="Search store name or ID" value="${S.q}" aria-label="Search store name or ID">
           <select class="select" data-k="service" aria-label="Service">${["All", "Fast delivery", "Same day", "Next day", "Collect"].map(x => `<option ${S.service === x ? "selected" : ""} value="${x}">Service: ${x}</option>`).join("")}</select></div>
         ${banner}
-        <div class="tscroll"><table class="stores st2">${colg}<thead><tr><th>Store</th>${withMk ? "<th>Marketplaces</th>" : ""}<th>FTE</th><th>Capacity use</th><th>Orders forecast</th><th>Prep, min/item</th><th>Earned / target, lei</th></tr></thead><tbody>${tr}${empty}</tbody></table></div>
+        <div class="tscroll"><table class="stores st2${withMk ? " has-mk" : ""}">${colg}<thead><tr><th>Store</th>${withMk ? sortTh("Marketplaces", "mk") : ""}${sortTh("FTE", "fte")}${sortTh("Capacity use", "use")}${sortTh("Orders forecast", "fc")}${sortTh("Prep, min/item", "prep")}${sortTh("Earned / target, lei", "earn")}</tr></thead><tbody>${tr}${empty}</tbody></table></div>
         <div class="pager"><span>${shown.length ? `${from + 1}–${from + shown.length} of ${totalN}` : `0 of ${totalN}`}</span><div class="pager-r"><div class="pages"><button class="pg" data-act="page" data-n="${Math.max(1, S.page - 1)}" aria-label="Previous page" ${S.page === 1 ? "disabled" : ""}>${svg('<path d="m15 6-6 6 6 6"/>', 14)}</button>${pg}<button class="pg" data-act="page" data-n="${Math.min(pages, S.page + 1)}" aria-label="Next page" ${S.page === pages ? "disabled" : ""}>${svg('<path d="m9 6 6 6-6 6"/>', 14)}</button></div><span class="per">Per page <select class="select sm" data-k="per" aria-label="Per page"><option ${S.per === 10 ? "selected" : ""}>10</option><option ${S.per === 25 ? "selected" : ""}>25</option></select></span></div></div>
       </section>`;
     return shell(inner, "Capacity", `${settingsBtn()}<label for="period">Period</label>${periodSelect()}`, kp);
@@ -613,6 +633,7 @@
       case "notif-settings": push(); go("r20/thresholds"); break;
       case "settings": push(); go(P.page === "store" ? settingsRoute(P.id) : "r55/account-settings"); break;
       case "restrict": push(); go("r21/restriction"); break;
+      case "sort": { const k = t.dataset.k; if (S.sort.k !== k) S.sort = { k, d: "asc" }; else if (S.sort.d === "asc") S.sort.d = "desc"; else S.sort = { k: null, d: null }; S.page = 1; render(); break; }
       case "page": S.page = +t.dataset.n; render(); break;
       case "store": go(storeRoute(+t.dataset.id, "collapsed")); break;
       case "alert": alertAction(t.dataset.a, +t.dataset.id); break;

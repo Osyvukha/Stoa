@@ -754,3 +754,12 @@ table.t-slots { min-width: 992px; }
 .ts-alert .al-ic { flex: none; color: var(--red-fg); }
 .ts-alert b { display: block; color: var(--red-fg); font-size: 14px; line-height: 20px; font-weight: 700; }
 .ts-alert p { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--text); }
+
+/* Sortable table headers (Stoa/Th): label + sort icon; none / asc / desc */
+.th-sort { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 0; margin: 0; font: inherit; font-weight: 600; color: inherit; text-align: left; white-space: normal; cursor: pointer; }
+.th-sort .si { flex: none; display: inline-grid; place-items: center; color: #868e96; }
+.th-sort.on, .th-sort.on .si { color: var(--brand); }
+.th-sort:hover .si { color: var(--text); }
+table.st2 th { white-space: normal; line-height: 18px; }
+table.stores.st2 thead th { padding-top: 16px; padding-bottom: 16px; }
+table.stores.st2.has-mk thead th { height: 70px; }
