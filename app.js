@@ -134,10 +134,13 @@
     const keys = Object.keys(weights), w = keys.map(k => weights[k] * (.8 + R() * .4)), base = alloc(tot, w);
     const out = {}; keys.forEach((k, i) => { if (base[i] > 0) out[k] = base[i]; }); return out;
   }
-  function breakdown(s, collect, R) {
+  // Internal delivery types are mutually exclusive per slot: Fast delivery = morning slot (starts before 12:00), Same day = afternoon slot,
+  // Next day = any slot on tomorrow or later days.
+  const internalType = (s, day) => day > 0 ? "Next day" : parseInt(s.r, 10) < 12 ? "Fast delivery" : "Same day";
+  function breakdown(s, collect, R, day) {
     if (collect) { s.internal = s.com ? { Collect: s.com } : {}; s.market = {}; return; }
     const it = Math.round(s.com * (.5 + R() * .2));
-    s.internal = distribute(it, IN_W, R); s.market = distribute(s.com - it, MK_W, R);
+    s.internal = it > 0 ? { [internalType(s, day)]: it } : {}; s.market = distribute(s.com - it, MK_W, R);
   }
   const FIXN = { 3: 3, 4: 4, 5: 3, 6: 0, 7: 3, 8: 0, 9: 2 }; // closed slots per Figma fixture (All stores badge)
   function genSlots(st, day, collect, R) {
@@ -180,7 +183,7 @@
     const fixture = id === 2 && day === 0 && !collect;
     const R = D.rng(D.hash(id + "|" + day + "|" + S.service));
     const slots = fixture ? D.timisoara.slots.map(s => Object.assign({}, s, { res: s.cap - s.com - s.av })) : genSlots(st, day, collect, R);
-    slots.forEach(s => { if (!s.internal) breakdown(s, collect, R); });
+    slots.forEach(s => { if (!s.internal) breakdown(s, collect, R, day); });
     const capT = sum(slots, "cap"), fcT = sum(slots, "fc"), comT = sum(slots, "com"), closed = !st.cap, util = pct(comT + sum(slots, "res"), capT);
     const kr = D.rng(D.hash(id + "k" + day + S.service)), d = () => 1 + Math.floor(kr() * 3);
     let kpis;
@@ -265,7 +268,7 @@
   const settingsBtn = () => `<button class="settings-btn" data-act="settings">${I.gear}<span>Settings</span></button>`;
 
   // ---------- shell ----------
-  const delta = k => k[2] ? (k[3] === 2 ? `<span class="neutral">${k[2]}</span>` : `<span class="${k[3] ? "up" : "down"}" title="Change against the same time yesterday">${k[3] ? I.tUp : I.tDown} ${k[2]}<span class="sr"> against the same time yesterday</span></span>`) : "";
+  const delta = k => k[2] ? (k[3] === 2 ? `<span class="neutral">${k[2]}</span>` : `<span class="${/^[−-]/.test(k[2]) ? "down" : "up"}" title="Change against the same time yesterday">${/^[−-]/.test(k[2]) ? I.tDown : I.tUp} ${k[2]}<span class="sr"> against the same time yesterday</span></span>`) : "";
   function shell(inner, title, controls, kpis, active, cls) {
     active = active || "capacity";
     const col = S.menuCollapsed;
