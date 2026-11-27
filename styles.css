@@ -829,3 +829,46 @@ table.stores.st2.has-mk thead th { height: 70px; }
 .fte-row.over .calc, .fte-row.over .load { color: var(--red-fg); font-weight: 600; }
 .fte-row .ov-msg { grid-column: 2 / -1; margin: -8px 0 10px; font-size: 12px; line-height: 18px; color: #c92a2a; }
 .fte-row .calc { white-space: nowrap; font-size: 13px; }
+
+/* Figma 11.27: KPI cards 9px bold title (-2%), 20px value, 11px trend, value row pinned to the bottom; band ends 12px below the cards */
+.kpi .t span:first-child { font-size: 9px; font-weight: 700; letter-spacing: -.02em; line-height: 14px; }
+.kpi .v b { font-size: 20px; font-weight: 700; line-height: 26px; }
+.kpi .v .up, .kpi .v .down { font-size: 11px; font-weight: 600; line-height: 16px; }
+.kpi .v .up svg, .kpi .v .down svg { width: 11px; height: 11px; }
+.kpi { padding: 8px 16px; display: flex; flex-direction: column; justify-content: space-between; }
+.kpi .t, .kpi.wrap .t { min-height: 14px; height: auto; align-items: flex-start; }
+.kpi .v { margin-top: auto; padding-top: 4px; align-items: center; }
+@media (min-width: 901px) { .kpi, .kpis.k7 .kpi { min-height: 56px; } .kpis.k7 .kpi .t, .kpis.k7 .kpi.wrap .t { min-height: 14px; } }
+.top { padding-bottom: 12px; }
+.content { padding-bottom: 80px; }
+/* stores list: FTE values are plain regular text */
+table.st2 td.fte-v { color: var(--text); font-weight: 400; }
+/* 16px between fields */
+.tools { gap: 16px; }
+.top-controls { gap: 16px; } .top-controls label { margin-right: -8px; }
+.set-body .th-row { gap: 16px; }
+.kpi .v { padding-top: 0; }
+table.stores.st2.has-mk thead th { height: 71px; }
+
+/* Notification settings drawers (Figma 486:15408 / 1092:17165): no section heading, header 24px line, headers 16px under the description, 16px gaps, 32x16 switch */
+.drawer header h2 { line-height: 24px; }
+.set-body.ns > .desc:first-child, .set-body > .desc:first-child { margin-top: 12px; }
+.set-body .th-row.th-h { padding: 0 0 8px; min-height: 0; height: 26px; align-items: start; line-height: 18px; }
+.set-body .th-row.th-h span:nth-child(2) { padding-left: 8px; } .set-body .th-row.th-h span:nth-child(3) { padding-left: 4px; } .set-body .th-row.th-h .r { text-align: left; }
+.set-body .th-row { padding: 8px 0; min-height: 0; }
+.set-body .th-row .link.strong { padding: 4px 0 0; line-height: 18px; height: auto; }
+.set-body .th-row .input, .set-body .th-row .select { color: var(--text); }
+.set-body .th-row.off .lbl { color: var(--text); } .set-body .th-row.off .sub { color: var(--dimmed); }
+.set-body .th-row.off .input, .set-body .th-row.off .select { color: var(--dimmed); }
+.set-body .th-row .switch { width: 32px; height: 16px; border-radius: 8px; } .set-body .th-row .switch::after { top: 2px; left: 2px; width: 12px; height: 12px; } .set-body .th-row .switch[aria-checked="true"]::after { left: 18px; }
+.set-body > .desc:first-child { margin: 12px 0 16px !important; }
+.set-body .th-row .sub { margin-top: 4px; }
+.set-body .th-row .link.strong { padding: 0; margin-top: 4px; height: 18px; }
+@media (min-width: 901px) { .kpis.k7 .kpi { min-height: 70px; } }
+.top:has(.kpis.k7) ~ .content { padding-bottom: 86px; }
+table.stores.st2.has-mk thead + tbody tr:nth-child(3) td { height: 55px; }
+.top-controls .settings-btn { margin-right: 0; }
+
+/* Figma sync 27 Nov: long slot alert texts stay on one line (Figma rows are 58px high; the Figma text is wider than the card) */
+.att-list .alert-row .txt { min-width: 0; flex: 1 1 auto; }
+.att-list .alert-row .txt b, .att-list .alert-row .txt > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

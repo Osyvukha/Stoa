@@ -30,8 +30,8 @@ window.DATA = {
     { p: "med", type: "fc", t: "Forecast +19% vs capacity", s: "Calea Victoriei 200 · Sector 1 · Hub", a: "Review" },
     { p: "med", type: "fc", t: "Forecast +19% vs capacity", s: "Bd. Iuliu Maniu 300 · Sector 6 · Store", a: "Review" },
     { p: "med", type: "fc", t: "Forecast +29% vs capacity", s: "Șos. Pipera 45 · Sector 2 · Hub", a: "Review" },
-    { p: "med", type: "fc", t: "Forecast +20% vs capacity", s: "Bd. Timișoara 26 · Sector 6 · Hub", a: "Review" },
-    { p: "med", type: "fill", t: "Approaching capacity 98% · 12:00 – 13:00", s: "Bd. Timișoara 26 · Sector 6 · Hub", a: "Add picker" },
+    { p: "med", type: "fc", t: "Slot forecast +20% vs capacity", s: "Bd. Timișoara 26 · Sector 6 · Hub", a: "Review" },
+    { p: "med", type: "fill", t: "Slot approaching capacity 98% · 12:00–13:00", s: "Bd. Timișoara 26 · Sector 6 · Hub", a: "Add picker" },
     { p: "low", type: "idle", t: "Idle since 10:00, 67% unused", s: "Șos. Ștefan cel Mare 12 · Sector 2 · Store", a: "Set pickers (FTE)" },
     { p: "low", type: "idle", t: "Idle since 10:30, 70% unused", s: "Calea Rahovei 266 · Sector 5 · Store", a: "Set pickers (FTE)" }
   ],
